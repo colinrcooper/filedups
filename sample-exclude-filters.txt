@@ -1,0 +1,6 @@
+*Android*
+*ntuser.dat*
+*.gradle*
+*AppData*
+*.pset
+*.log
