@@ -241,7 +241,6 @@ if __name__ == '__main__':
     dups = {}
     scanOptions = {}
     scanOptions = loadDefaultScanOptions()
-    print('FIRST SCAN OPTIONS: ', scanOptions)
     
     parser = argparse.ArgumentParser(description='Search for duplicate files in one or more folders')
     parser.add_argument('-cfg', '--configFile', help='Configuration File for script', required=False)
