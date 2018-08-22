@@ -1,6 +1,6 @@
 [General]
 FilterMode = Include
-FilterFile = c:\temp\sample-include-filters.txt
+FilterFile = c:\filedups\sample-include-filters.txt
 
 [Scan Options]
 SubDirs = TRUE

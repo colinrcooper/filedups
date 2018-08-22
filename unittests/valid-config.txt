@@ -1,7 +1,7 @@
 #For Unit Testing. This changes all default values
 [General]
 FilterMode = Include
-FilterFile = c:\temp\sample-include-filters.txt
+FilterFile = c:\filedups\unittests\include-filters.txt
 
 [Scan Options]
 SubDirs = FALSE

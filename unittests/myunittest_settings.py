@@ -1,0 +1,1 @@
+rootdir = 'c:\\filedups\\unittests'
