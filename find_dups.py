@@ -3,10 +3,14 @@ import hashlib
 import fnmatch
 import configparser
 import argparse
+
+warnings = []
  
 def findDup(parentFolder, filters, scanOptions):
     # Dups in format {hash:[names]}
     dups = {}
+    hashAlgorithms = {}
+    hashAlgorithms = getHashAlgorithms(scanOptions['HashAlgorithm'])
     filterMode = scanOptions['FilterMode']
     for dirName, subdirs, fileList in os.walk(parentFolder):
         newDirName = True
@@ -31,7 +35,7 @@ def findDup(parentFolder, filters, scanOptions):
                         newDirName = False
                     if scanOptions['MaxFileSize'] > fileSize or scanOptions['MaxFileSize'] == 0:
                         # Calculate hash
-                        fileHash = hashfile(path, scanOptions['Blocksize'], scanOptions['HashAlgorithm'])
+                        fileHash = hashfile(path, scanOptions['Blocksize'], hashAlgorithms)
                     else:
                         fileHash = 0
                 else:
@@ -58,72 +62,76 @@ def joinDicts(dict1, dict2):
         else:
             dict1[key] = dict2[key]
  
- 
-def hashfile(path, blocksize, algorithm):
+def getHashAlgorithms(algorithm_val):
+    if not str(algorithm_val).isnumeric():
+        algorithm_val = 1
+    hashAlgorithms = {}
     valSHA512 = 32
     valSHA384 = 16
     valSHA256 = 8
     valSHA224 = 4
     valSHA1 = 2
     valMD5 = 1
-    useSHA512 = False
-    useSHA384 = False
-    useSHA256 = False
-    useSHA224 = False
-    useSHA1 = False
-    useMD5 = False
-    compositeHash = ''
+    hashAlgorithms['useSHA512'] = False
+    hashAlgorithms['useSHA384'] = False
+    hashAlgorithms['useSHA256'] = False
+    hashAlgorithms['useSHA224'] = False
+    hashAlgorithms['useSHA1'] = False
+    hashAlgorithms['useMD5'] = False
 
-    if (algorithm <= 0) or (algorithm >= 64):
-        algorithm = 1
-    if algorithm >= valSHA512:
-        useSHA512 = True
-        algorithm = algorithm - valSHA512
-    if algorithm >= valSHA384:
-        useSHA384 = True
-        algorithm = algorithm - valSHA384
-    if algorithm >= valSHA256:
-        useSHA256 = True
-        algorithm = algorithm - valSHA256
-    if algorithm >= valSHA224:
-        useSHA224 = True
-        algorithm = algorithm - valSHA224
-    if algorithm >= valSHA1:
-        useSHA1 = True
-        algorithm = algorithm - valSHA1
-    if algorithm >= valMD5:
-        useMD5 = True
-        algorithm = algorithm - valMD5
+    if (algorithm_val <= 0) or (algorithm_val >= 64):
+        algorithm_val = 1
+    if algorithm_val >= valSHA512:
+        hashAlgorithms['useSHA512'] = True
+        algorithm_val = algorithm_val - valSHA512
+    if algorithm_val >= valSHA384:
+        hashAlgorithms['useSHA384'] = True
+        algorithm_val = algorithm_val - valSHA384
+    if algorithm_val >= valSHA256:
+        hashAlgorithms['useSHA256'] = True
+        algorithm_val = algorithm_val - valSHA256
+    if algorithm_val >= valSHA224:
+        hashAlgorithms['useSHA224'] = True
+        algorithm_val = algorithm_val - valSHA224
+    if algorithm_val >= valSHA1:
+        hashAlgorithms['useSHA1'] = True
+        algorithm_val = algorithm_val - valSHA1
+    if algorithm_val >= valMD5:
+        hashAlgorithms['useMD5'] = True
+    return hashAlgorithms
+ 
+def hashfile(path, blocksize, hashAlgorithms):
+    compositeHash = ''
 
     if blocksize <= 0:
         blocksize = 65536
     try:
         afile = open(path, 'rb')
-        if useMD5: hasherMD5 = hashlib.md5()
-        if useSHA1: hasherSHA1 = hashlib.sha1()
-        if useSHA224: hasherSHA224 = hashlib.sha224()
-        if useSHA256: hasherSHA256 = hashlib.sha256()
-        if useSHA384: hasherSHA384 = hashlib.sha384()
-        if useSHA512: hasherSHA512 = hashlib.sha512()
+        if hashAlgorithms['useMD5']: hasherMD5 = hashlib.md5()
+        if hashAlgorithms['useSHA1']: hasherSHA1 = hashlib.sha1()
+        if hashAlgorithms['useSHA224']: hasherSHA224 = hashlib.sha224()
+        if hashAlgorithms['useSHA256']: hasherSHA256 = hashlib.sha256()
+        if hashAlgorithms['useSHA384']: hasherSHA384 = hashlib.sha384()
+        if hashAlgorithms['useSHA512']: hasherSHA512 = hashlib.sha512()
         buf = afile.read(blocksize)
         while len(buf) > 0:
-            if useMD5: hasherMD5.update(buf)
-            if useSHA1: hasherSHA1.update(buf)
-            if useSHA224: hasherSHA224.update(buf)
-            if useSHA256: hasherSHA256.update(buf)
-            if useSHA384: hasherSHA384.update(buf)
-            if useSHA512: hasherSHA512.update(buf)
+            if hashAlgorithms['useMD5']: hasherMD5.update(buf)
+            if hashAlgorithms['useSHA1']: hasherSHA1.update(buf)
+            if hashAlgorithms['useSHA224']: hasherSHA224.update(buf)
+            if hashAlgorithms['useSHA256']: hasherSHA256.update(buf)
+            if hashAlgorithms['useSHA384']: hasherSHA384.update(buf)
+            if hashAlgorithms['useSHA512']: hasherSHA512.update(buf)
             buf = afile.read(blocksize)
         afile.close()
-        if useMD5: compositeHash = compositeHash + hasherMD5.hexdigest()
-        if useSHA1: compositeHash = compositeHash + hasherSHA1.hexdigest()
-        if useSHA224: compositeHash = compositeHash + hasherSHA224.hexdigest()
-        if useSHA256: compositeHash = compositeHash + hasherSHA256.hexdigest()
-        if useSHA384: compositeHash = compositeHash + hasherSHA384.hexdigest()
-        if useSHA512: compositeHash = compositeHash + hasherSHA512.hexdigest()
+        if hashAlgorithms['useMD5']: compositeHash = compositeHash + hasherMD5.hexdigest()
+        if hashAlgorithms['useSHA1']: compositeHash = compositeHash + hasherSHA1.hexdigest()
+        if hashAlgorithms['useSHA224']: compositeHash = compositeHash + hasherSHA224.hexdigest()
+        if hashAlgorithms['useSHA256']: compositeHash = compositeHash + hasherSHA256.hexdigest()
+        if hashAlgorithms['useSHA384']: compositeHash = compositeHash + hasherSHA384.hexdigest()
+        if hashAlgorithms['useSHA512']: compositeHash = compositeHash + hasherSHA512.hexdigest()
         return compositeHash
     except:
-        print('Error calculating hash of ', path)
+        warnings.append('WARNING: Could not calculate the hash of ' + path)
         return 0
  
  
@@ -186,46 +194,15 @@ def loadFilters(filterFile):
         filters = ''
     return filters
 
-def printHashAlgorithms(algorithm):
-    valSHA512 = 32
-    valSHA384 = 16
-    valSHA256 = 8
-    valSHA224 = 4
-    valSHA1 = 2
-    valMD5 = 1
-    useSHA512 = False
-    useSHA384 = False
-    useSHA256 = False
-    useSHA224 = False
-    useSHA1 = False
-    useMD5 = False
-
+def printHashAlgorithms(hashAlgorithms):
     print('*  USING ALGORITHMS:')
-    if algorithm >= valSHA512:
-        useSHA512 = True
-        algorithm = algorithm - valSHA512
-        print('*  + SHA512 ')
-    if algorithm >= valSHA384:
-        useSHA384 = True
-        algorithm = algorithm - valSHA384
-        print('*  + SHA384 ')
-    if algorithm >= valSHA256:
-        useSHA256 = True
-        algorithm = algorithm - valSHA256
-        print('*  + SHA256 ')
-    if algorithm >= valSHA224:
-        useSHA224 = True
-        algorithm = algorithm - valSHA224
-        print('*  + SHA224 ')
-    if algorithm >= valSHA1:
-        useSHA1 = True
-        algorithm = algorithm - valSHA1
-        print('*  + SHA1 ')
-    if algorithm >= valMD5:
-        useMD5 = True
-        algorithm = algorithm - valMD5
-        print('*  + MD5 ')
-
+    if hashAlgorithms['useMD5']: print('*  + MD5 ')
+    if hashAlgorithms['useSHA1']: print('*  + SHA1 ')
+    if hashAlgorithms['useSHA224']: print('*  + SHA224 ')
+    if hashAlgorithms['useSHA256']: print('*  + SHA256 ')
+    if hashAlgorithms['useSHA384']: print('*  + SHA384 ')
+    if hashAlgorithms['useSHA512']: print('*  + SHA512 ')
+ 
 def loadCommandLineScanOptions(args, scanOptions):
     if args['filterMode'] != None and (args['filterMode'].upper()=='INCLUDE' or args['filterMode'].upper()=='EXCLUDE' or args['filterMode'].upper()=='NONE'):
         scanOptions['FilterMode'] = args['filterMode'].upper()
@@ -273,7 +250,7 @@ if __name__ == '__main__':
     filters = loadFilters(scanOptions['FilterFile'])
     folders = args['directories']
 
-    printHashAlgorithms(scanOptions['HashAlgorithm'])
+    printHashAlgorithms(getHashAlgorithms(scanOptions['HashAlgorithm']))
     print('*  FOLDER(S) TO SCAN: ', folders)
     print('*  SCAN OPTIONS USED: ', scanOptions)
     print('*  FILTERS: ', filters)
@@ -287,4 +264,7 @@ if __name__ == '__main__':
         else:
             print('%s is not a valid path, please verify' % i)
             sys.exit()
+    for x in range(len(warnings)):
+        print (warnings[x])
+
     printResults(dups)

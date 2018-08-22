@@ -1,6 +1,5 @@
 import unittest
 from myunittest_settings import *
-#from .. find_dups import loadDefaultScanOptions, loadConfigFileScanOptions, hashfile, findDup
 
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -13,26 +12,203 @@ class TestUM(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_hashfile(self):
-        self.assertEqual(hashfile(rootdir + '\\invalidpath\\invalidfile.txt',65536,1),0)
+    def test_getHashAlgorithms_MD5(self):
+        hashAlgorithms = {}
+        hashAlgorithms['useSHA512'] = False
+        hashAlgorithms['useSHA384'] = False
+        hashAlgorithms['useSHA256'] = False
+        hashAlgorithms['useSHA224'] = False
+        hashAlgorithms['useSHA1'] = False
+        hashAlgorithms['useMD5'] = True
+        self.assertDictEqual(getHashAlgorithms(1), hashAlgorithms)
+        
+    def test_getHashAlgorithms_SHA1(self):
+        hashAlgorithms = {}
+        hashAlgorithms['useSHA512'] = False
+        hashAlgorithms['useSHA384'] = False
+        hashAlgorithms['useSHA256'] = False
+        hashAlgorithms['useSHA224'] = False
+        hashAlgorithms['useSHA1'] = True
+        hashAlgorithms['useMD5'] = False
+        self.assertDictEqual(getHashAlgorithms(2), hashAlgorithms)
+          
+    def test_getHashAlgorithms_SHA224(self):
+        hashAlgorithms = {}
+        hashAlgorithms['useSHA512'] = False
+        hashAlgorithms['useSHA384'] = False
+        hashAlgorithms['useSHA256'] = False
+        hashAlgorithms['useSHA224'] = True
+        hashAlgorithms['useSHA1'] = False
+        hashAlgorithms['useMD5'] = False
+        self.assertDictEqual(getHashAlgorithms(4), hashAlgorithms)
+        
+    def test_getHashAlgorithms_SHA256(self):
+        hashAlgorithms = {}
+        hashAlgorithms['useSHA512'] = False
+        hashAlgorithms['useSHA384'] = False
+        hashAlgorithms['useSHA256'] = True
+        hashAlgorithms['useSHA224'] = False
+        hashAlgorithms['useSHA1'] = False
+        hashAlgorithms['useMD5'] = False
+        self.assertDictEqual(getHashAlgorithms(8), hashAlgorithms)
+
+    def test_getHashAlgorithms_SHA384(self):
+        hashAlgorithms = {}
+        hashAlgorithms['useSHA512'] = False
+        hashAlgorithms['useSHA384'] = True
+        hashAlgorithms['useSHA256'] = False
+        hashAlgorithms['useSHA224'] = False
+        hashAlgorithms['useSHA1'] = False
+        hashAlgorithms['useMD5'] = False
+        self.assertDictEqual(getHashAlgorithms(16), hashAlgorithms)
+
+    def test_getHashAlgorithms_SHA512(self):
+        hashAlgorithms = {}
+        hashAlgorithms['useSHA512'] = True
+        hashAlgorithms['useSHA384'] = False
+        hashAlgorithms['useSHA256'] = False
+        hashAlgorithms['useSHA224'] = False
+        hashAlgorithms['useSHA1'] = False
+        hashAlgorithms['useMD5'] = False
+        self.assertDictEqual(getHashAlgorithms(32), hashAlgorithms)
+
+    def test_getHashAlgorithms_All(self):
+        hashAlgorithms = {}
+        hashAlgorithms['useSHA512'] = True
+        hashAlgorithms['useSHA384'] = True
+        hashAlgorithms['useSHA256'] = True
+        hashAlgorithms['useSHA224'] = True
+        hashAlgorithms['useSHA1'] = True
+        hashAlgorithms['useMD5'] = True
+        self.assertDictEqual(getHashAlgorithms(63), hashAlgorithms)
+
+    def test_getHashAlgorithms_InvalidHigh(self):
+        hashAlgorithms = {}
+        hashAlgorithms['useSHA512'] = False
+        hashAlgorithms['useSHA384'] = False
+        hashAlgorithms['useSHA256'] = False
+        hashAlgorithms['useSHA224'] = False
+        hashAlgorithms['useSHA1'] = False
+        hashAlgorithms['useMD5'] = True
+        self.assertDictEqual(getHashAlgorithms(100), hashAlgorithms)
+
+    def test_getHashAlgorithms_InvalidLow(self):
+        hashAlgorithms = {}
+        hashAlgorithms['useSHA512'] = False
+        hashAlgorithms['useSHA384'] = False
+        hashAlgorithms['useSHA256'] = False
+        hashAlgorithms['useSHA224'] = False
+        hashAlgorithms['useSHA1'] = False
+        hashAlgorithms['useMD5'] = True
+        self.assertDictEqual(getHashAlgorithms(-1), hashAlgorithms)
+
+    def test_getHashAlgorithms_InvalidType(self):
+        hashAlgorithms = {}
+        hashAlgorithms['useSHA512'] = False
+        hashAlgorithms['useSHA384'] = False
+        hashAlgorithms['useSHA256'] = False
+        hashAlgorithms['useSHA224'] = False
+        hashAlgorithms['useSHA1'] = False
+        hashAlgorithms['useMD5'] = True
+        self.assertDictEqual(getHashAlgorithms('A'), hashAlgorithms)
+
+    def test_hashfile_InvalidFile(self):
+        hashAlgorithms = {}
+        hashAlgorithms['useMD5']=True
+        hashAlgorithms['useSHA1']=False
+        hashAlgorithms['useSHA224']=False
+        hashAlgorithms['useSHA256']=False
+        hashAlgorithms['useSHA384']=False
+        hashAlgorithms['useSHA512']=False
+        self.assertEqual(hashfile(rootdir + '\\invalidpath\\invalidfile.txt', 65536, hashAlgorithms),0)
+        
+    def test_hashfile_InvalidBlocksize(self):
         #Invalid blocksize should default to 65536
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', -1, 1),'b7356a4b8764b54b3e3119dc2394bc7e')
-        #Invalid algorithm should default to MD5
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, -1),'b7356a4b8764b54b3e3119dc2394bc7e')
+        hashAlgorithms = {}
+        hashAlgorithms['useMD5']=True
+        hashAlgorithms['useSHA1']=False
+        hashAlgorithms['useSHA224']=False
+        hashAlgorithms['useSHA256']=False
+        hashAlgorithms['useSHA384']=False
+        hashAlgorithms['useSHA512']=False
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', -1, hashAlgorithms),'b7356a4b8764b54b3e3119dc2394bc7e')
+
+    def test_hashfile_MD5(self):
         #Check MD5 is calculated correctly
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, 1),'b7356a4b8764b54b3e3119dc2394bc7e')
+        hashAlgorithms = {}
+        hashAlgorithms['useMD5']=True
+        hashAlgorithms['useSHA1']=False
+        hashAlgorithms['useSHA224']=False
+        hashAlgorithms['useSHA256']=False
+        hashAlgorithms['useSHA384']=False
+        hashAlgorithms['useSHA512']=False
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, hashAlgorithms),'b7356a4b8764b54b3e3119dc2394bc7e')
+
+    def test_hashfile_SHA1(self):
         #Check SHA1 is calculated correctly
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, 2),'b38005fd56fa2de86f6458cb73d0d794912e94c0')
+        hashAlgorithms = {}
+        hashAlgorithms['useMD5']=False
+        hashAlgorithms['useSHA1']=True
+        hashAlgorithms['useSHA224']=False
+        hashAlgorithms['useSHA256']=False
+        hashAlgorithms['useSHA384']=False
+        hashAlgorithms['useSHA512']=False
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, hashAlgorithms),'b38005fd56fa2de86f6458cb73d0d794912e94c0')
+
+    def test_hashfile_SHA224(self):
         #Check SHA224 is calculated correctly
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, 4),'4f97a461d81e2aab7e1d7e0b208271317b07a6fe12d0fbbb1919fdc7')
+        hashAlgorithms = {}
+        hashAlgorithms['useMD5']=False
+        hashAlgorithms['useSHA1']=False
+        hashAlgorithms['useSHA224']=True
+        hashAlgorithms['useSHA256']=False
+        hashAlgorithms['useSHA384']=False
+        hashAlgorithms['useSHA512']=False
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, hashAlgorithms),'4f97a461d81e2aab7e1d7e0b208271317b07a6fe12d0fbbb1919fdc7')
+
+    def test_hashfile_SHA256(self):
         #Check SHA256 is calculated correctly
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, 8),'2ec3d40c866e3e2829dbbaade913e97da18eae9a67ae786da7e430a5f1186716')
+        hashAlgorithms = {}
+        hashAlgorithms['useMD5']=False
+        hashAlgorithms['useSHA1']=False
+        hashAlgorithms['useSHA224']=False
+        hashAlgorithms['useSHA256']=True
+        hashAlgorithms['useSHA384']=False
+        hashAlgorithms['useSHA512']=False
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, hashAlgorithms),'2ec3d40c866e3e2829dbbaade913e97da18eae9a67ae786da7e430a5f1186716')
+
+    def test_hashfile_SHA384(self):
         #Check SHA384 is calculated correctly
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, 16),'c8482ee90ab9cd3f50915d466c108cdef06b515954b53630aa2964a120adc883099314a4a6e47fb25daaf49ac1143070')
+        hashAlgorithms = {}
+        hashAlgorithms['useMD5']=False
+        hashAlgorithms['useSHA1']=False
+        hashAlgorithms['useSHA224']=False
+        hashAlgorithms['useSHA256']=False
+        hashAlgorithms['useSHA384']=True
+        hashAlgorithms['useSHA512']=False
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, hashAlgorithms),'c8482ee90ab9cd3f50915d466c108cdef06b515954b53630aa2964a120adc883099314a4a6e47fb25daaf49ac1143070')
+
+    def test_hashfile_SHA512(self):
         #Check SHA512 is calculated correctly
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, 32),'8531c07a2237475934675ac39ef71e8d49dc1c2c48482eead108910112e233bdfa10f60da906a1759b265e6b0db9cd7eaa5e9ec70175c615cc31c3f22529fa05')
+        hashAlgorithms = {}
+        hashAlgorithms['useMD5']=False
+        hashAlgorithms['useSHA1']=False
+        hashAlgorithms['useSHA224']=False
+        hashAlgorithms['useSHA256']=False
+        hashAlgorithms['useSHA384']=False
+        hashAlgorithms['useSHA512']=True
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, hashAlgorithms),'8531c07a2237475934675ac39ef71e8d49dc1c2c48482eead108910112e233bdfa10f60da906a1759b265e6b0db9cd7eaa5e9ec70175c615cc31c3f22529fa05')
+
+    def test_hashfile_AllHashes(self):
         #Check Full Concatenation of all hashing algorithms is calculated correctly
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, 63),'b7356a4b8764b54b3e3119dc2394bc7eb38005fd56fa2de86f6458cb73d0d794912e94c04f97a461d81e2aab7e1d7e0b208271317b07a6fe12d0fbbb1919fdc72ec3d40c866e3e2829dbbaade913e97da18eae9a67ae786da7e430a5f1186716c8482ee90ab9cd3f50915d466c108cdef06b515954b53630aa2964a120adc883099314a4a6e47fb25daaf49ac11430708531c07a2237475934675ac39ef71e8d49dc1c2c48482eead108910112e233bdfa10f60da906a1759b265e6b0db9cd7eaa5e9ec70175c615cc31c3f22529fa05')
+        hashAlgorithms = {}
+        hashAlgorithms['useMD5']=True
+        hashAlgorithms['useSHA1']=True
+        hashAlgorithms['useSHA224']=True
+        hashAlgorithms['useSHA256']=True
+        hashAlgorithms['useSHA384']=True
+        hashAlgorithms['useSHA512']=True
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, hashAlgorithms),'b7356a4b8764b54b3e3119dc2394bc7eb38005fd56fa2de86f6458cb73d0d794912e94c04f97a461d81e2aab7e1d7e0b208271317b07a6fe12d0fbbb1919fdc72ec3d40c866e3e2829dbbaade913e97da18eae9a67ae786da7e430a5f1186716c8482ee90ab9cd3f50915d466c108cdef06b515954b53630aa2964a120adc883099314a4a6e47fb25daaf49ac11430708531c07a2237475934675ac39ef71e8d49dc1c2c48482eead108910112e233bdfa10f60da906a1759b265e6b0db9cd7eaa5e9ec70175c615cc31c3f22529fa05')
         
 
     def test_loadDefaultScanOptionsValidValues(self):
