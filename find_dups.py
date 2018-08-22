@@ -4,9 +4,10 @@ import fnmatch
 import configparser
 import argparse
  
-def findDup(parentFolder, filterMode, filters, scanOptions):
+def findDup(parentFolder, filters, scanOptions):
     # Dups in format {hash:[names]}
     dups = {}
+    filterMode = scanOptions['FilterMode']
     for dirName, subdirs, fileList in os.walk(parentFolder):
         newDirName = True
         for fileName in fileList:
@@ -24,7 +25,7 @@ def findDup(parentFolder, filterMode, filters, scanOptions):
                 for filter_fn in filters:
                     if fnmatch.fnmatch(path, filter_fn):
                         filterFound=True
-                if (not filterFound and filterMode.upper() == 'EXCLUDE') or (filterFound and filterMode.upper() == 'INCLUDE'):
+                if (not filterFound and filterMode.upper() == 'EXCLUDE') or (filterFound and filterMode.upper() == 'INCLUDE') or (filterMode.upper()=='NONE'):
                     if newDirName:
                         #print('Scanning %s' % dirName)
                         newDirName = False
@@ -38,6 +39,7 @@ def findDup(parentFolder, filterMode, filters, scanOptions):
                 # Add or append the file path
                 if (fileHash != 0):
                     if ((fileSize == 0 and scanOptions['MaxFileSize'] == 0 and scanOptions['IncludeEmptyFiles'].upper() == 'TRUE')
+                        or (fileSize == 0 and scanOptions['MaxFileSize'] > 0 and scanOptions['IncludeEmptyFiles'].upper() == 'TRUE')
                         or (fileSize > 0 and scanOptions['MaxFileSize'] == 0) 
                         or (fileSize > 0 and scanOptions['MaxFileSize'] > 0 and scanOptions['MaxFileSize'] >= fileSize)):
                     
@@ -72,6 +74,8 @@ def hashfile(path, blocksize, algorithm):
     useMD5 = False
     compositeHash = ''
 
+    if (algorithm <= 0) or (algorithm >= 64):
+        algorithm = 1
     if algorithm >= valSHA512:
         useSHA512 = True
         algorithm = algorithm - valSHA512
@@ -91,6 +95,8 @@ def hashfile(path, blocksize, algorithm):
         useMD5 = True
         algorithm = algorithm - valMD5
 
+    if blocksize <= 0:
+        blocksize = 65536
     try:
         afile = open(path, 'rb')
         if useMD5: hasherMD5 = hashlib.md5()
@@ -148,26 +154,28 @@ def loadDefaultScanOptions():
     return scanOptions
 
 def loadConfigFileScanOptions(configFile):
+    
     #These values will override the defaults if they are set
     scanOptions = {}
     scanOptions = loadDefaultScanOptions()
-    config = configparser.ConfigParser()
-    with open(configFile) as cf:
-            config.read_file(cf)
-    if config.has_option('General', 'FilterMode') and (config.get('General', 'FilterMode').upper() == 'NONE' or config.get('General', 'FilterMode').upper() == 'INCLUDE') or config.get('General', 'filterMode').upper() == 'EXCLUDE':
-        scanOptions['FilterMode'] = config.get('General', 'FilterMode').upper()
-    if (scanOptions['FilterMode'].upper() != 'NONE') and (os.path.exists(config.get('General', 'FilterFile'))):
-        scanOptions['FilterFile'] = config.get('General', 'FilterFile')
-    if config.has_option('Scan Options', 'SubDirs') and (config.get('Scan Options', 'SubDirs').upper() == 'TRUE' or config.get('Scan Options', 'SubDirs').upper() == 'FALSE'):
-        scanOptions['SubDirs'] = config.get('Scan Options', 'SubDirs').upper()
-    if config.has_option('Scan Options', 'MaxFileSize') and (config.get('Scan Options', 'MaxFileSize').isnumeric()):
-        scanOptions['MaxFileSize'] = int(config.get('Scan Options', 'MaxFileSize'))
-    if config.has_option('Scan Options', 'IncludeEmptyFiles') and (config.get('Scan Options', 'IncludeEmptyFiles').upper() == 'TRUE' or config.get('Scan Options', 'IncludeEmptyFiles').upper == 'FALSE'):
-        scanOptions['IncludeEmptyFiles'] = config.get('Scan Options', 'IncludeEmptyFiles').upper()
-    if config.has_option('Advanced', 'Blocksize') and (config.get('Advanced', 'Blocksize').isnumeric()):
-        scanOptions['Blocksize'] = int(config.get('Advanced', 'Blocksize'))
-    if config.has_option('Advanced', 'HashAlgorithm') and (config.get('Advanced', 'HashAlgorithm').isnumeric()):
-        scanOptions['HashAlgorithm'] = int(config.get('Advanced', 'HashAlgorithm'))
+    if os.path.exists(configFile):
+        config = configparser.ConfigParser()
+        with open(configFile) as cf:
+                config.read_file(cf)
+        if config.has_option('General', 'FilterMode') and (config.get('General', 'FilterMode').upper() == 'NONE' or config.get('General', 'FilterMode').upper() == 'INCLUDE') or config.get('General', 'filterMode').upper() == 'EXCLUDE':
+            scanOptions['FilterMode'] = config.get('General', 'FilterMode').upper()
+        if (scanOptions['FilterMode'].upper() != 'NONE') and (os.path.exists(config.get('General', 'FilterFile'))):
+            scanOptions['FilterFile'] = config.get('General', 'FilterFile')
+        if config.has_option('Scan Options', 'SubDirs') and (config.get('Scan Options', 'SubDirs').upper() == 'TRUE' or config.get('Scan Options', 'SubDirs').upper() == 'FALSE'):
+            scanOptions['SubDirs'] = config.get('Scan Options', 'SubDirs').upper()
+        if config.has_option('Scan Options', 'MaxFileSize') and (config.get('Scan Options', 'MaxFileSize').isnumeric()):
+            scanOptions['MaxFileSize'] = int(config.get('Scan Options', 'MaxFileSize'))
+        if config.has_option('Scan Options', 'IncludeEmptyFiles') and (config.get('Scan Options', 'IncludeEmptyFiles').upper() == 'TRUE' or config.get('Scan Options', 'IncludeEmptyFiles').upper == 'FALSE'):
+            scanOptions['IncludeEmptyFiles'] = config.get('Scan Options', 'IncludeEmptyFiles').upper()
+        if config.has_option('Advanced', 'Blocksize') and (config.get('Advanced', 'Blocksize').isnumeric()):
+            scanOptions['Blocksize'] = int(config.get('Advanced', 'Blocksize'))
+        if config.has_option('Advanced', 'HashAlgorithm') and (config.get('Advanced', 'HashAlgorithm').isnumeric()):
+            scanOptions['HashAlgorithm'] = int(config.get('Advanced', 'HashAlgorithm'))
     return scanOptions
 
 def loadFilters(filterFile):
@@ -175,7 +183,7 @@ def loadFilters(filterFile):
         with open(scanOptions['FilterFile']) as f:
             filters = f.read().splitlines()
     else:
-        filters = ""
+        filters = ''
     return filters
 
 def printHashAlgorithms(algorithm):
@@ -224,11 +232,11 @@ def loadCommandLineScanOptions(args, scanOptions):
     if args['filterFile'] != None:
         if os.path.exists(args['filterFile']):
             scanOptions['FilterFile'] = args['filterFile']
-    if args['subDirs'] != None and (args['subDirs'].upper()=='TRUE' or args['subDirs'].upper())=='FALSE':
+    if args['subDirs'] != None and (args['subDirs'].upper()=='TRUE' or args['subDirs'].upper()=='FALSE'):
         scanOptions['SubDirs'] = args['subDirs'].upper()
     if args['maxFileSize'] != None:
         scanOptions['MaxFileSize'] = int(args['maxFileSize'])
-    if args['includeEmptyFiles'] != None and (args['includeEmptyFiles'].upper()=='TRUE' or args['includeEmptyFiles'].upper())=='FALSE':
+    if (args['includeEmptyFiles'] != None) and ((args['includeEmptyFiles'].upper()=='TRUE') or args['includeEmptyFiles'].upper()=='FALSE'):
         scanOptions['IncludeEmptyFiles'] = args['includeEmptyFiles'].upper()
     if args['blocksize'] != None:
         scanOptions['Blocksize'] = int(args['blocksize'])
@@ -275,7 +283,7 @@ if __name__ == '__main__':
         # Iterate the folders given
         if os.path.exists(i):
             # Find the duplicated files and append them to the dups
-            joinDicts(dups, findDup(i, scanOptions['FilterMode'], filters, scanOptions))
+            joinDicts(dups, findDup(i, filters, scanOptions))
         else:
             print('%s is not a valid path, please verify' % i)
             sys.exit()

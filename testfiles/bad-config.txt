@@ -1,0 +1,20 @@
+[General]
+FilterMode = FilterModeInvalidValue
+FilterFile = c:\temp\filethatdoesnotexist.txt
+
+[Scan Options]
+SubDirs = SubDirsInvalidValue
+MaxFileSize = MaxFileSizeNonNumericValue
+IncludeEmptyFiles = IncludeEmptyFilesInvalidValue
+
+[Advanced]
+Blocksize = BlockSizeInvalidValue
+# HashAlgorithm Values - NOTE using multiple hashing algorithms will
+# slow the script significantly
+# MD5 = 1
+# SHA1 = 2
+# SHA224 = 4
+# SHA256 = 8
+# SHA384 = 16
+# SHA512 = 32
+HashAlgorithm = HashAlgorithmInvalidValue

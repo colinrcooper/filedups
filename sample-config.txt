@@ -1,6 +1,6 @@
 [General]
 FilterMode = Include
-FilterFile = c:\temp\include-filters.txt
+FilterFile = c:\temp\sample-include-filters.txt
 
 [Scan Options]
 SubDirs = TRUE
@@ -8,7 +8,7 @@ MaxFileSize = 100000
 IncludeEmptyFiles = TRUE
 
 [Advanced]
-Blocksize = 65536
+Blocksize = 131072
 # HashAlgorithm Values - NOTE using multiple hashing algorithms will
 # slow the script significantly
 # MD5 = 1
