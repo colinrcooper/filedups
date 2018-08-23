@@ -5,6 +5,14 @@ import configparser
 import argparse
 
 warnings = []
+BULLET = '*    ' + chr(8226) + ' '
+DEFAULT_FILTERMODE = 'NONE'
+DEFAULT_FILTERFILE = ''
+DEFAULT_SUBDIRS = 'TRUE'
+DEFAULT_MAXFILESIZE = 0
+DEFAULT_INCLUDEEMPTYFILES = 'FALSE'
+DEFAULT_BLOCKSIZE = 65536
+DEFAULT_HASHALGORITHM = 1
  
 def findDup(parentFolder, filters, scanOptions):
     # Dups in format {hash:[names]}
@@ -152,13 +160,13 @@ def printResults(dict1):
 def loadDefaultScanOptions():
     #These values will be used if they are not set through config file or command line parameters
     scanOptions = {}
-    scanOptions['FilterMode'] = 'EXCLUDE'
-    scanOptions['FilterFile'] = ''
-    scanOptions['SubDirs'] = 'TRUE'
-    scanOptions['MaxFileSize'] = 0
-    scanOptions['IncludeEmptyFiles'] = 'FALSE'
-    scanOptions['Blocksize'] = 65536
-    scanOptions['HashAlgorithm'] = 1
+    scanOptions['FilterMode'] = DEFAULT_FILTERMODE
+    scanOptions['FilterFile'] = DEFAULT_FILTERFILE
+    scanOptions['SubDirs'] = DEFAULT_SUBDIRS
+    scanOptions['MaxFileSize'] = DEFAULT_MAXFILESIZE
+    scanOptions['IncludeEmptyFiles'] = DEFAULT_INCLUDEEMPTYFILES
+    scanOptions['Blocksize'] = DEFAULT_BLOCKSIZE
+    scanOptions['HashAlgorithm'] = DEFAULT_HASHALGORITHM
     return scanOptions
 
 def loadConfigFileScanOptions(configFile):
@@ -196,12 +204,12 @@ def loadFilters(filterFile):
 
 def printHashAlgorithms(hashAlgorithms):
     print('*  USING ALGORITHMS:')
-    if hashAlgorithms['useMD5']: print('*    ' + chr(8226) + ' MD5')
-    if hashAlgorithms['useSHA1']: print('*    ' + chr(8226) + ' SHA1')
-    if hashAlgorithms['useSHA224']: print('*    ' + chr(8226) + ' SHA224')
-    if hashAlgorithms['useSHA256']: print('*    ' + chr(8226) + ' SHA256')
-    if hashAlgorithms['useSHA384']: print('*    ' + chr(8226) + 'SHA384')
-    if hashAlgorithms['useSHA512']: print('*    ' + chr(8226) + 'SHA512')
+    if hashAlgorithms['useMD5']: print(BULLET + 'MD5')
+    if hashAlgorithms['useSHA1']: print(BULLET + 'SHA1')
+    if hashAlgorithms['useSHA224']: print(BULLET + 'SHA224')
+    if hashAlgorithms['useSHA256']: print(BULLET + 'SHA256')
+    if hashAlgorithms['useSHA384']: print(BULLET + 'SHA384')
+    if hashAlgorithms['useSHA512']: print(BULLET + 'SHA512')
  
 def loadCommandLineScanOptions(args, scanOptions):
     if args['filterMode'] != None and (args['filterMode'].upper()=='INCLUDE' or args['filterMode'].upper()=='EXCLUDE' or args['filterMode'].upper()=='NONE'):
@@ -232,12 +240,38 @@ def padSpaces(stringToPad, lengthToPad):
         stringToPad = stringToPad + ' '
     return stringToPad
 
-if __name__ == '__main__':
+def printSettings(folders, scanOptions, filters):
+    print('')
+    print('************************************************************')
+    printHashAlgorithms(getHashAlgorithms(scanOptions['HashAlgorithm']))
+    print('*  FOLDER(S) TO SCAN:')
+    for x in folders: print(BULLET + str(x)) 
+    print('*  SCAN OPTIONS USED:')
+    for x in scanOptions: print(BULLET + padSpaces(str(x),20) + ': ' + str(scanOptions[x]))
+    if len(filters) > 0:
+        print('*  FILTERS: ')
+        for x in filters: print(BULLET + str(x)) 
+    print('************************************************************')
+    print ('')
 
+def printWarnings(warnings):
+    if len(warnings) > 0:
+        print('')
+        print('************************************************************')
+        print('*  WARNINGS:')
+        for x in range(len(warnings)):
+            print (BULLET + ' ' + warnings[x])
+        print('************************************************************')
+        print('')
+
+if __name__ == '__main__':
     dups = {}
+
+    #First load the default options
     scanOptions = {}
     scanOptions = loadDefaultScanOptions()
-    
+
+    #Read the command line parameters
     parser = argparse.ArgumentParser(description='Search for duplicate files in one or more folders')
     parser.add_argument('-cfg', '--configFile', help='Configuration File for script', required=False)
     parser.add_argument('-fm', '--filterMode', help='Filter Mode', choices=['INCLUDE', 'EXCLUDE', 'NONE'], required=False)
@@ -250,50 +284,39 @@ if __name__ == '__main__':
     parser.add_argument('-ha', '--hashAlgorithm', type=int, help='Algorithm(s) to be used for file hashing', required=False)
     parser.add_argument('-dirs', '--directories', nargs='+', help = 'List of directories to scan', required=True)
     args = vars(parser.parse_args())
-    
+
+    #If there is a config file set in the command line parameters, get it and read the settings from the file.
+    #Default values are over-written by any config file settings.
     config = configparser.ConfigParser()
     scanOptions['ConfigFile']=''
     if args['configFile'] != None: scanOptions['ConfigFile'] = args['configFile']
     configFile = scanOptions['ConfigFile']
-    print('')
-    print('************************************************************')
     if os.path.exists(configFile):
         scanOptions = loadConfigFileScanOptions(configFile)
     loadCommandLineScanOptions(args, scanOptions)
-    if scanOptions['FilterFile'] != None and args['filters'] != None:
+
+    #If a filter has been set in the commandline, use that. Otherwise try to get it from the config file
+    if scanOptions['FilterFile'] != None and scanOptions['FilterFile'] != '' and args['filters'] != None:
         warnings.append('INFO: Supplied --filters command line parameter will take precedence over supplied --filterMode parameter or config file settings')
     if args['filters'] != None:
         filters = args['filters']
     else:
         filters = loadFilters(scanOptions['FilterFile'])
+
+    #Get list of directories to be scanned (currently can only be a command line parameter)
     folders = args['directories']
 
-    printHashAlgorithms(getHashAlgorithms(scanOptions['HashAlgorithm']))
-    print('*  FOLDER(S) TO SCAN:')
-    for x in folders:
-        print('*    ' + chr(8226) + ' ' + str(x)) 
-    print('*  SCAN OPTIONS USED:')
-    for x in scanOptions:
-        print('*    ' + chr(8226) + ' ' + padSpaces(str(x),20) + ': ' + str(scanOptions[x]))
-    print('*  FILTERS: ')
-    for x in filters:
-        print('*    ' + chr(8226) + ' ' + str(x)) 
-    print('************************************************************')
-    print ('')
+    #Print the list of settings to the console
+    printSettings(folders, scanOptions, filters)
 
+    #Iterate through each supplied folder name and start scanning for duplicates
     for i in folders:
-        # Iterate the folders given
         if os.path.exists(i):
             # Find the duplicated files and append them to the dups
             joinDicts(dups, findDup(i, filters, scanOptions))
         else:
             warnings.append('WARNING: ' + str(i) + ' is not a valid path, please verify')
-    if len(warnings) > 0:
-        print('')
-        print('************************************************************')
-        print('*  WARNINGS:')
-        for x in range(len(warnings)):
-            print ('*    ' + chr(8226) + ' ' + warnings[x])
-        print('************************************************************')
-        print('')
+
+    #Print any errors / warnings and the duplicates found to the consoles
+    printWarnings(warnings)
     printResults(dups)
