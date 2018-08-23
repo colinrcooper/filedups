@@ -51,7 +51,7 @@ optional arguments:
   -fm {INCLUDE,EXCLUDE,NONE}, --filterMode {INCLUDE,EXCLUDE,NONE}
                         Filter Mode
   -ff FILTERFILE, --filterFile FILTERFILE
-                        File containing list of filters to be applied if Filter Mode in not NONE
+                        File containing list of filters to be applied if Filter Mode is not NONE
   -s {TRUE,FALSE}, --subDirs {TRUE,FALSE}
                         Scan subdirectories of selected folders?
   -ms MAXFILESIZE, --maxFileSize MAXFILESIZE
@@ -65,7 +65,7 @@ optional arguments:
   -dirs DIRECTORIES [DIRECTORIES ...], --directories DIRECTORIES [DIRECTORIES ...]
 ```
   
-  Values supplied through the commandline take precedence over values supplied in a config file.
+  Values supplied through the command line take precedence over values supplied in a config file.
 
 ## Authors
 
