@@ -38,6 +38,7 @@ See Getting Started and Prerequisites
 
 ## Usage
 
+```
 find_dups.py [-h] [-cfg CONFIGFILE] [-fm {INCLUDE,EXCLUDE,NONE}]
                 [-ff FILTERFILE] [-s {TRUE,FALSE}] [-ms MAXFILESIZE]
                 [-emp {TRUE,FALSE}] [-bs BLOCKSIZE] [-ha HASHALGORITHM]
@@ -63,6 +64,7 @@ optional arguments:
   -ha HASHALGORITHM, --hashAlgorithm HASHALGORITHM
                         Algorithm(s) to be used for file hashing
   -dirs DIRECTORIES [DIRECTORIES ...], --directories DIRECTORIES [DIRECTORIES ...]
+```
   
   Values supplied through the commandline take precedence over values supplied in a config file.
 
