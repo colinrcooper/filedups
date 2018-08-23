@@ -31,7 +31,7 @@ def findDup(parentFolder, filters, scanOptions):
                         filterFound=True
                 if (not filterFound and filterMode.upper() == 'EXCLUDE') or (filterFound and filterMode.upper() == 'INCLUDE') or (filterMode.upper()=='NONE'):
                     if newDirName:
-                        #print('Scanning %s' % dirName)
+                        print('Scanning %s' % shortenName(dirName, 80))
                         newDirName = False
                     if scanOptions['MaxFileSize'] > fileSize or scanOptions['MaxFileSize'] == 0:
                         # Calculate hash
@@ -137,18 +137,18 @@ def hashfile(path, blocksize, hashAlgorithms):
  
 def printResults(dict1):
     results = list(filter(lambda x: len(x) > 1, dict1.values()))
+    print('************************************************************')
     if len(results) > 0:
-        print('Duplicates Found:')
-        print('The following files are identical. The name could differ, but the content is identical')
-        print('___________________')
+        print('*  RESULTS: DUPLICATES FOUND:')
+        print('*  ---------------------------------------------------------')
         for result in results:
             for subresult in result:
-                print('\t\t%s' % subresult)
-            print('___________________')
+                print('*  \t%s' % subresult)
+            print('*  ---------------------------------------------------------')
  
     else:
-        print('No duplicate files found.')
-
+        print('*  RESULTS: NO DUPLICATE FILES FOUND')
+    print('************************************************************')
 def loadDefaultScanOptions():
     #These values will be used if they are not set through config file or command line parameters
     scanOptions = {}
@@ -196,12 +196,12 @@ def loadFilters(filterFile):
 
 def printHashAlgorithms(hashAlgorithms):
     print('*  USING ALGORITHMS:')
-    if hashAlgorithms['useMD5']: print('*  + MD5 ')
-    if hashAlgorithms['useSHA1']: print('*  + SHA1 ')
-    if hashAlgorithms['useSHA224']: print('*  + SHA224 ')
-    if hashAlgorithms['useSHA256']: print('*  + SHA256 ')
-    if hashAlgorithms['useSHA384']: print('*  + SHA384 ')
-    if hashAlgorithms['useSHA512']: print('*  + SHA512 ')
+    if hashAlgorithms['useMD5']: print('*    ' + chr(8226) + ' MD5')
+    if hashAlgorithms['useSHA1']: print('*    ' + chr(8226) + ' SHA1')
+    if hashAlgorithms['useSHA224']: print('*    ' + chr(8226) + ' SHA224')
+    if hashAlgorithms['useSHA256']: print('*    ' + chr(8226) + ' SHA256')
+    if hashAlgorithms['useSHA384']: print('*    ' + chr(8226) + 'SHA384')
+    if hashAlgorithms['useSHA512']: print('*    ' + chr(8226) + 'SHA512')
  
 def loadCommandLineScanOptions(args, scanOptions):
     if args['filterMode'] != None and (args['filterMode'].upper()=='INCLUDE' or args['filterMode'].upper()=='EXCLUDE' or args['filterMode'].upper()=='NONE'):
@@ -220,6 +220,17 @@ def loadCommandLineScanOptions(args, scanOptions):
     if args['hashAlgorithm'] != None:
         scanOptions['HashAlgorithm'] = int(args['hashAlgorithm'])
     return scanOptions
+
+def shortenName(stringToShorten, lengthToShorten):
+    if lengthToShorten < 25: lengthToShorten = 25
+    if len(stringToShorten) > lengthToShorten:
+        stringToShorten = stringToShorten[:lengthToShorten-25] + '...' + stringToShorten[-22:]
+    return stringToShorten
+
+def padSpaces(stringToPad, lengthToPad):
+    while len(stringToPad) < lengthToPad:
+        stringToPad = stringToPad + ' '
+    return stringToPad
 
 if __name__ == '__main__':
 
@@ -240,10 +251,11 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
     
     config = configparser.ConfigParser()
-    scanOptions['ConfigFile']=""
+    scanOptions['ConfigFile']=''
     if args['configFile'] != None: scanOptions['ConfigFile'] = args['configFile']
     configFile = scanOptions['ConfigFile']
-    print('************************************')
+    print('')
+    print('************************************************************')
     if os.path.exists(configFile):
         scanOptions = loadConfigFileScanOptions(configFile)
     loadCommandLineScanOptions(args, scanOptions)
@@ -251,10 +263,17 @@ if __name__ == '__main__':
     folders = args['directories']
 
     printHashAlgorithms(getHashAlgorithms(scanOptions['HashAlgorithm']))
-    print('*  FOLDER(S) TO SCAN: ', folders)
-    print('*  SCAN OPTIONS USED: ', scanOptions)
-    print('*  FILTERS: ', filters)
-    print('************************************')
+    print('*  FOLDER(S) TO SCAN:')
+    for x in folders:
+        print('*    ' + chr(8226) + ' ' + str(x)) 
+    print('*  SCAN OPTIONS USED:')
+    for x in scanOptions:
+        print('*    ' + chr(8226) + ' ' + padSpaces(str(x),20) + ': ' + str(scanOptions[x]))
+    print('*  FILTERS: ')
+    for x in filters:
+        print('*    ' + chr(8226) + ' ' + str(x)) 
+    print('************************************************************')
+    print ('')
 
     for i in folders:
         # Iterate the folders given
@@ -264,7 +283,13 @@ if __name__ == '__main__':
         else:
             print('%s is not a valid path, please verify' % i)
             sys.exit()
+    if len(warnings) > 0:
+        print('')
+        print('************************************************************')
+        print('*  WARNINGS:')
     for x in range(len(warnings)):
-        print (warnings[x])
-
+        print ('*    ' + chr(8226) + ' ' + warnings[x])
+    if len(warnings) > 0:
+        print('************************************************************')
+        print('')
     printResults(dups)
