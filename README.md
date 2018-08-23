@@ -39,10 +39,11 @@ See Getting Started and Prerequisites
 ## Usage
 
 ```
-find_dups.py [-h] [-cfg CONFIGFILE] [-fm {INCLUDE,EXCLUDE,NONE}]
-                [-ff FILTERFILE] [-s {TRUE,FALSE}] [-ms MAXFILESIZE]
-                [-emp {TRUE,FALSE}] [-bs BLOCKSIZE] [-ha HASHALGORITHM]
-                -dirs DIRECTORIES [DIRECTORIES ...]
+usage: find_dups.py [-h] [-cfg CONFIGFILE] [-fm {INCLUDE,EXCLUDE,NONE}]
+                    [-ff FILTERFILE] [-f FILTERS [FILTERS ...]]
+                    [-s {TRUE,FALSE}] [-ms MAXFILESIZE] [-emp {TRUE,FALSE}]
+                    [-bs BLOCKSIZE] [-ha HASHALGORITHM] -dirs DIRECTORIES
+                    [DIRECTORIES ...]
                     
 optional arguments:
   -h, --help            show this help message and exit

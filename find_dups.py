@@ -242,7 +242,7 @@ if __name__ == '__main__':
     parser.add_argument('-cfg', '--configFile', help='Configuration File for script', required=False)
     parser.add_argument('-fm', '--filterMode', help='Filter Mode', choices=['INCLUDE', 'EXCLUDE', 'NONE'], required=False)
     parser.add_argument('-ff', '--filterFile', help='File containing list of filters to be applied if Filter Mode is not NONE', required=False)
-    parser.add_argument('-f', '--filters', nargs='+', help = 'List of filters', required=True)
+    parser.add_argument('-f', '--filters', nargs='+', help = 'List of filters', required=False)
     parser.add_argument('-s', '--subDirs', help='Scan subdirectories of selected folders?', choices=['TRUE', 'FALSE'], required=False)
     parser.add_argument('-ms', '--maxFileSize', type=int, help='Maximum size of files to be scanned', required=False)
     parser.add_argument('-emp', '--includeEmptyFiles', help='Include files with no content in results?', choices=['TRUE', 'FALSE'], required=False)
