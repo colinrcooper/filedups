@@ -52,6 +52,8 @@ optional arguments:
                         Filter Mode
   -ff FILTERFILE, --filterFile FILTERFILE
                         File containing list of filters to be applied if Filter Mode is not NONE
+  -f FILTERS [FILTERS ...], --filters FILTERS [FILTERS ...]
+                        List of filters
   -s {TRUE,FALSE}, --subDirs {TRUE,FALSE}
                         Scan subdirectories of selected folders?
   -ms MAXFILESIZE, --maxFileSize MAXFILESIZE

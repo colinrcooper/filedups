@@ -242,6 +242,7 @@ if __name__ == '__main__':
     parser.add_argument('-cfg', '--configFile', help='Configuration File for script', required=False)
     parser.add_argument('-fm', '--filterMode', help='Filter Mode', choices=['INCLUDE', 'EXCLUDE', 'NONE'], required=False)
     parser.add_argument('-ff', '--filterFile', help='File containing list of filters to be applied if Filter Mode is not NONE', required=False)
+    parser.add_argument('-f', '--filters', nargs='+', help = 'List of filters', required=True)
     parser.add_argument('-s', '--subDirs', help='Scan subdirectories of selected folders?', choices=['TRUE', 'FALSE'], required=False)
     parser.add_argument('-ms', '--maxFileSize', type=int, help='Maximum size of files to be scanned', required=False)
     parser.add_argument('-emp', '--includeEmptyFiles', help='Include files with no content in results?', choices=['TRUE', 'FALSE'], required=False)
@@ -259,7 +260,12 @@ if __name__ == '__main__':
     if os.path.exists(configFile):
         scanOptions = loadConfigFileScanOptions(configFile)
     loadCommandLineScanOptions(args, scanOptions)
-    filters = loadFilters(scanOptions['FilterFile'])
+    if scanOptions['FilterFile'] != None and args['filters'] != None:
+        warnings.append('INFO: Supplied --filters command line parameter will take precedence over supplied --filterMode parameter or config file settings')
+    if args['filters'] != None:
+        filters = args['filters']
+    else:
+        filters = loadFilters(scanOptions['FilterFile'])
     folders = args['directories']
 
     printHashAlgorithms(getHashAlgorithms(scanOptions['HashAlgorithm']))
@@ -281,15 +287,13 @@ if __name__ == '__main__':
             # Find the duplicated files and append them to the dups
             joinDicts(dups, findDup(i, filters, scanOptions))
         else:
-            print('%s is not a valid path, please verify' % i)
-            sys.exit()
+            warnings.append('WARNING: ' + str(i) + ' is not a valid path, please verify')
     if len(warnings) > 0:
         print('')
         print('************************************************************')
         print('*  WARNINGS:')
-    for x in range(len(warnings)):
-        print ('*    ' + chr(8226) + ' ' + warnings[x])
-    if len(warnings) > 0:
+        for x in range(len(warnings)):
+            print ('*    ' + chr(8226) + ' ' + warnings[x])
         print('************************************************************')
         print('')
     printResults(dups)
