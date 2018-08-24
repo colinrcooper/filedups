@@ -7,6 +7,7 @@ FilterFile = c:\filedups\unittests\include-filters.txt
 SubDirs = FALSE
 MaxFileSize = 100000
 IncludeEmptyFiles = TRUE
+CSVOutput = c:\filedups\unittests\results.csv
 
 [Advanced]
 Blocksize = 131072

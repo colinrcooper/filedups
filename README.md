@@ -6,6 +6,8 @@ A python script to provide a highly-customizable way to scan one or more folders
 
 * Create a folder c:\filedups
 * Copy find_dups.py to c:\filedups
+
+Optionally, you may need to copy these files if you plan to use a configuration file to set the script parameters or filters:
 * Copy sample-config.txt to c:\filedups
 * Copy sample-exclude-filters to c:\filedups
 * Copy sample-include-filters to c:\filedups

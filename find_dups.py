@@ -4,6 +4,8 @@ import fnmatch
 import configparser
 import argparse
 
+os.chdir(os.path.dirname(__file__))
+
 warnings = []
 BULLET = '*    ' + chr(8226) + ' '
 DEFAULT_FILTERMODE = 'NONE'
@@ -13,6 +15,9 @@ DEFAULT_MAXFILESIZE = 0
 DEFAULT_INCLUDEEMPTYFILES = 'FALSE'
 DEFAULT_BLOCKSIZE = 65536
 DEFAULT_HASHALGORITHM = 1
+DEFAULT_CSV_FOLDER = os.getcwd()
+DEFAULT_CSV = ''
+MIN_BLOCKSIZE = 65536
  
 def findDup(parentFolder, filters, scanOptions):
     # Dups in format {hash:[names]}
@@ -143,20 +148,32 @@ def hashfile(path, blocksize, hashAlgorithms):
         return 0
  
  
-def printResults(dict1):
+def printResults(dict1, csvOutput):
+    if not os.path.exists(os.path.dirname(csvOutput)):
+        warnings.append('WARNING: The folder name "' + os.path.dirname(csvOutput)
+                        + '" for the CSV output file does not exist. '
+                        + 'Results will be saved in ' + csvOutput.replace(os.path.dirname(csvOutput), DEFAULT_CSV_FOLDER) + ' instead.')
+        csvOutput = csvOutput.replace(os.path.dirname(csvOutput), DEFAULT_CSV_FOLDER)
+        print (csvOutput)
     results = list(filter(lambda x: len(x) > 1, dict1.values()))
     print('************************************************************')
     if len(results) > 0:
+        if csvOutput !='': f = open(csvOutput, 'w+')
         print('*  RESULTS: DUPLICATES FOUND:')
+        if csvOutput !='': f.write('DUPLICATES FOUND:\n')
         print('*  ---------------------------------------------------------')
         for result in results:
+            if csvOutput !='': f.write('\n')
             for subresult in result:
                 print('*  \t%s' % subresult)
+                if csvOutput !='': f.write(subresult + '\n')
             print('*  ---------------------------------------------------------')
+        if csvOutput !='': f.close()
  
     else:
         print('*  RESULTS: NO DUPLICATE FILES FOUND')
     print('************************************************************')
+
 def loadDefaultScanOptions():
     #These values will be used if they are not set through config file or command line parameters
     scanOptions = {}
@@ -167,6 +184,7 @@ def loadDefaultScanOptions():
     scanOptions['IncludeEmptyFiles'] = DEFAULT_INCLUDEEMPTYFILES
     scanOptions['Blocksize'] = DEFAULT_BLOCKSIZE
     scanOptions['HashAlgorithm'] = DEFAULT_HASHALGORITHM
+    scanOptions['CSVOutput'] = DEFAULT_CSV
     return scanOptions
 
 def loadConfigFileScanOptions(configFile):
@@ -189,17 +207,20 @@ def loadConfigFileScanOptions(configFile):
         if config.has_option('Scan Options', 'IncludeEmptyFiles') and (config.get('Scan Options', 'IncludeEmptyFiles').upper() == 'TRUE' or config.get('Scan Options', 'IncludeEmptyFiles').upper == 'FALSE'):
             scanOptions['IncludeEmptyFiles'] = config.get('Scan Options', 'IncludeEmptyFiles').upper()
         if config.has_option('Advanced', 'Blocksize') and (config.get('Advanced', 'Blocksize').isnumeric()):
-            scanOptions['Blocksize'] = int(config.get('Advanced', 'Blocksize'))
+            scanOptions['Blocksize'] = abs(int(config.get('Advanced', 'Blocksize')))
+            if scanOptions['Blocksize'] <= MIN_BLOCKSIZE: scanOptions['Blocksize'] = MIN_BLOCKSIZE
         if config.has_option('Advanced', 'HashAlgorithm') and (config.get('Advanced', 'HashAlgorithm').isnumeric()):
             scanOptions['HashAlgorithm'] = int(config.get('Advanced', 'HashAlgorithm'))
+        if config.has_option('Scan Options', 'CSVOutput'):
+            scanOptions['CSVOutput'] = str(config.get('Scan Options', 'CSVOutput'))
     return scanOptions
 
 def loadFilters(filterFile):
     if os.path.exists(filterFile):    
-        with open(scanOptions['FilterFile']) as f:
+        with open(filterFile) as f:
             filters = f.read().splitlines()
     else:
-        filters = ''
+        filters = []
     return filters
 
 def printHashAlgorithms(hashAlgorithms):
@@ -220,22 +241,32 @@ def loadCommandLineScanOptions(args, scanOptions):
     if args['subDirs'] != None and (args['subDirs'].upper()=='TRUE' or args['subDirs'].upper()=='FALSE'):
         scanOptions['SubDirs'] = args['subDirs'].upper()
     if args['maxFileSize'] != None:
-        scanOptions['MaxFileSize'] = int(args['maxFileSize'])
+        scanOptions['MaxFileSize'] = int(abs(args['maxFileSize']))
     if (args['includeEmptyFiles'] != None) and ((args['includeEmptyFiles'].upper()=='TRUE') or args['includeEmptyFiles'].upper()=='FALSE'):
         scanOptions['IncludeEmptyFiles'] = args['includeEmptyFiles'].upper()
-    if args['blocksize'] != None:
-        scanOptions['Blocksize'] = int(args['blocksize'])
+    if args['blocksize'] != None and abs(args['blocksize']) >= MIN_BLOCKSIZE:
+        scanOptions['Blocksize'] = int(abs(args['blocksize']))
     if args['hashAlgorithm'] != None:
         scanOptions['HashAlgorithm'] = int(args['hashAlgorithm'])
+    if args['csvOutput'] != None:
+        scanOptions['CSVOutput'] = args['csvOutput']
     return scanOptions
 
 def shortenName(stringToShorten, lengthToShorten):
-    if lengthToShorten < 25: lengthToShorten = 25
-    if len(stringToShorten) > lengthToShorten:
-        stringToShorten = stringToShorten[:lengthToShorten-25] + '...' + stringToShorten[-22:]
-    return stringToShorten
+    if stringToShorten == None: return ''
+    if lengthToShorten == None: return stringToShorten
+    if lengthToShorten < 5: lengthToShorten = 5
+ 
+    if len(stringToShorten) <= lengthToShorten:
+        shortenedString = stringToShorten
+    else:
+        splitSize = int(round((lengthToShorten-3) / 2,0))
+        shortenedString = stringToShorten[:splitSize] + '...' + stringToShorten[-splitSize:]
+
+    return shortenedString
 
 def padSpaces(stringToPad, lengthToPad):
+    stringToPad = str(stringToPad)
     while len(stringToPad) < lengthToPad:
         stringToPad = stringToPad + ' '
     return stringToPad
@@ -259,17 +290,50 @@ def printWarnings(warnings):
         print('')
         print('************************************************************')
         print('*  WARNINGS:')
-        for x in range(len(warnings)):
-            print (BULLET + ' ' + warnings[x])
+        for x in range(len(warnings)): print (BULLET + ' ' + warnings[x])
         print('************************************************************')
         print('')
 
-if __name__ == '__main__':
-    dups = {}
-
-    #First load the default options
+def getConfigurations(cmdArgs):
+    #First load the default scan options
     scanOptions = {}
     scanOptions = loadDefaultScanOptions()
+
+    #Then over-write these default scan options with any values supplied in a configuration file
+    config = configparser.ConfigParser()
+    scanOptions['ConfigFile']=''
+    if cmdArgs['configFile'] != None: scanOptions['ConfigFile'] = cmdArgs['configFile']
+    configFile = scanOptions['ConfigFile']
+    if os.path.exists(configFile): scanOptions = loadConfigFileScanOptions(configFile)
+
+    #Finally over-write these scan options with any explicitly supplied in the command line itself
+    loadCommandLineScanOptions(cmdArgs, scanOptions)
+    return scanOptions
+
+def getFilters(filterFile, cmdFilters):
+    #If a filter has been set in the commandline, use that. Otherwise try to get it from the config file
+    if filterFile != None and filterFile != '' and cmdFilters != None:
+        warnings.append('INFO: Supplied --filters command line parameter will take precedence over supplied --filterMode parameter or config file settings')
+    if cmdFilters != None and cmdFilters != '':
+        filters = cmdFilters
+    elif filterFile != None and filterFile != '':
+        filters = loadFilters(filterFile)
+    else:
+        filters = []
+    return filters
+
+def getDupsInFolders(folders):
+    #Iterate through each supplied folder name and start scanning for duplicates
+    for i in folders:
+        if os.path.exists(i):
+            # Find the duplicated files and append them to the dups
+            joinDicts(dups, findDup(i, filters, scanOptions))
+        else:
+            warnings.append('WARNING: ' + str(i) + ' is not a valid path, please verify')    
+    return dups
+
+if __name__ == '__main__':
+    dups = {}
 
     #Read the command line parameters
     parser = argparse.ArgumentParser(description='Search for duplicate files in one or more folders')
@@ -282,41 +346,27 @@ if __name__ == '__main__':
     parser.add_argument('-emp', '--includeEmptyFiles', help='Include files with no content in results?', choices=['TRUE', 'FALSE'], required=False)
     parser.add_argument('-bs', '--blocksize', type=int, help='Blocksize for file reads', required=False)
     parser.add_argument('-ha', '--hashAlgorithm', type=int, help='Algorithm(s) to be used for file hashing', required=False)
+    parser.add_argument('-csv', '--csvOutput', help='Path to output results in CSV format', required=False)
     parser.add_argument('-dirs', '--directories', nargs='+', help = 'List of directories to scan', required=True)
     args = vars(parser.parse_args())
 
-    #If there is a config file set in the command line parameters, get it and read the settings from the file.
-    #Default values are over-written by any config file settings.
-    config = configparser.ConfigParser()
-    scanOptions['ConfigFile']=''
-    if args['configFile'] != None: scanOptions['ConfigFile'] = args['configFile']
-    configFile = scanOptions['ConfigFile']
-    if os.path.exists(configFile):
-        scanOptions = loadConfigFileScanOptions(configFile)
-    loadCommandLineScanOptions(args, scanOptions)
+    #Construct the set of scan options from command line parameters (1st precedence), configuration file settings (2nd precedence), and default values (fallback)
+    scanOptions = getConfigurations(args)
 
-    #If a filter has been set in the commandline, use that. Otherwise try to get it from the config file
-    if scanOptions['FilterFile'] != None and scanOptions['FilterFile'] != '' and args['filters'] != None:
-        warnings.append('INFO: Supplied --filters command line parameter will take precedence over supplied --filterMode parameter or config file settings')
-    if args['filters'] != None:
-        filters = args['filters']
-    else:
-        filters = loadFilters(scanOptions['FilterFile'])
-
+    #Get the filter list to be used, if any
+    filters = getFilters(scanOptions['FilterFile'], args['filters'])
+    
     #Get list of directories to be scanned (currently can only be a command line parameter)
     folders = args['directories']
 
     #Print the list of settings to the console
     printSettings(folders, scanOptions, filters)
 
-    #Iterate through each supplied folder name and start scanning for duplicates
-    for i in folders:
-        if os.path.exists(i):
-            # Find the duplicated files and append them to the dups
-            joinDicts(dups, findDup(i, filters, scanOptions))
-        else:
-            warnings.append('WARNING: ' + str(i) + ' is not a valid path, please verify')
+    #Find all the duplicates
+    dups = getDupsInFolders(folders)
+
+    #Print the results to the console
+    printResults(dups, scanOptions['CSVOutput'])
 
     #Print any errors / warnings and the duplicates found to the consoles
     printWarnings(warnings)
-    printResults(dups)
