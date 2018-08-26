@@ -3,6 +3,7 @@ import hashlib
 import fnmatch
 import configparser
 import argparse
+import platform
 
 os.chdir(os.path.dirname(__file__))
 
@@ -18,27 +19,25 @@ DEFAULT_HASHALGORITHM = 1
 DEFAULT_CSV_FOLDER = os.getcwd()
 DEFAULT_CSV = ''
 MIN_BLOCKSIZE = 65536
- 
+
+
 def findDup(parentFolder, filters, scanOptions):
-    # Dups in format {hash:[names]}
-    dups = {}
-    hashAlgorithms = {}
-    hashAlgorithms = getHashAlgorithms(scanOptions['HashAlgorithm'])
+    # This does a quick scan to identify files of exactly the same size without having to read every files contents
+    # This shorter 'preliminary list' is then passed for file hashing which is much slower. In this way, only likely candidates for duplicates are read
+
+    sizeDups = {}
+    hashDups = {}
     filterMode = scanOptions['FilterMode']
     for dirName, subdirs, fileList in os.walk(parentFolder):
         newDirName = True
         for fileName in fileList:
-            path = os.path.join(dirName, fileName)
-            if scanOptions['MaxFileSize'] > 0 or scanOptions['IncludeEmptyFiles']=='FALSE':
-                try:
-                    fileSize = int(os.path.getsize(path))
-                except:
-                    fileSize = 0
-            else:
-                fileSize = 0
+
+
             if ((scanOptions['SubDirs'].upper()=='FALSE') and (dirName == parentFolder)) or (scanOptions['SubDirs'].upper()!='FALSE'):
                 # Get the path to the file
                 filterFound = False
+                # Calculate size
+                path = os.path.join(dirName, fileName)
                 for filter_fn in filters:
                     if fnmatch.fnmatch(path, filter_fn):
                         filterFound=True
@@ -46,27 +45,45 @@ def findDup(parentFolder, filters, scanOptions):
                     if newDirName:
                         print('Scanning %s' % shortenName(dirName, 80))
                         newDirName = False
-                    if scanOptions['MaxFileSize'] > fileSize or scanOptions['MaxFileSize'] == 0:
-                        # Calculate hash
-                        fileHash = hashfile(path, scanOptions['Blocksize'], hashAlgorithms)
-                    else:
-                        fileHash = 0
+
+                    try:
+                        fileSize = int(os.path.getsize(path))
+                    except:
+                        fileSize = -1
                 else:
-                    fileHash = 0
+                    fileSize = -1
                 # Add or append the file path
-                if (fileHash != 0):
+                if (fileSize != -1):
                     if ((fileSize == 0 and scanOptions['MaxFileSize'] == 0 and scanOptions['IncludeEmptyFiles'].upper() == 'TRUE')
                         or (fileSize == 0 and scanOptions['MaxFileSize'] > 0 and scanOptions['IncludeEmptyFiles'].upper() == 'TRUE')
                         or (fileSize > 0 and scanOptions['MaxFileSize'] == 0) 
                         or (fileSize > 0 and scanOptions['MaxFileSize'] > 0 and scanOptions['MaxFileSize'] >= fileSize)):
                     
-                        if fileHash in dups:
-                            dups[fileHash].append(path)
+                        if fileSize in sizeDups:
+                            sizeDups[fileSize].append(path)
                         else:
-                            dups[fileHash] = [path]
+                            sizeDups[fileSize] = [path]
+    hashDups = findDupsInDict(sizeDups, scanOptions['HashAlgorithm'], scanOptions['Blocksize'])
+    return hashDups
+
+def findDupsInDict(fileDict, hashAlgorithmVal, blocksize):
+    dups = {}
+    hashAlgorithms = {}
+    hashAlgorithms = getHashAlgorithms(hashAlgorithmVal)
+    results = list(filter(lambda x: len(x) > 1, fileDict.values()))
+
+    if len(results) > 0:
+        for result in results:
+            for subresult in result:
+                print ('Checking hash of:', subresult)
+                fileHash = hashfile(subresult, blocksize, hashAlgorithms)
+                print ('[',fileHash, ']')
+                if fileHash in dups:
+                    dups[fileHash].append(subresult)
+                else:
+                    dups[fileHash] = [subresult]
     return dups
- 
- 
+
 # Joins two dictionaries
 def joinDicts(dict1, dict2):
     for key in dict2.keys():
@@ -325,6 +342,7 @@ def getFilters(filterFile, cmdFilters):
 def getDupsInFolders(folders):
     #Iterate through each supplied folder name and start scanning for duplicates
     for i in folders:
+        if i[-1] == ':' and platform.system() == 'Windows': i = i + '\\'
         if os.path.exists(i):
             # Find the duplicated files and append them to the dups
             joinDicts(dups, findDup(i, filters, scanOptions))
