@@ -28,10 +28,11 @@ def findDup(parentFolder, filters, scanOptions):
     sizeDups = {}
     hashDups = {}
     filterMode = scanOptions['FilterMode']
+    numFiles = 0
     for dirName, subdirs, fileList in os.walk(parentFolder):
         newDirName = True
         for fileName in fileList:
-
+            numFiles = numFiles + 1
 
             if ((scanOptions['SubDirs'].upper()=='FALSE') and (dirName == parentFolder)) or (scanOptions['SubDirs'].upper()!='FALSE'):
                 # Get the path to the file
@@ -43,9 +44,9 @@ def findDup(parentFolder, filters, scanOptions):
                         filterFound=True
                 if (not filterFound and filterMode.upper() == 'EXCLUDE') or (filterFound and filterMode.upper() == 'INCLUDE') or (filterMode.upper()=='NONE'):
                     if newDirName:
-                        print('Scanning %s' % shortenName(dirName, 80))
+                        print(' ' * 100, end='\r')
+                        print('Scanning %s' % shortenName(dirName, 80), end='\r')
                         newDirName = False
-
                     try:
                         fileSize = int(os.path.getsize(path))
                     except:
@@ -63,6 +64,9 @@ def findDup(parentFolder, filters, scanOptions):
                             sizeDups[fileSize].append(path)
                         else:
                             sizeDups[fileSize] = [path]
+    print (' ' * 100)
+    print (numFiles, 'file(s) in',parentFolder, 'scanned.')
+    print ('Now checking potential duplicates...')
     hashDups = findDupsInDict(sizeDups, scanOptions['HashAlgorithm'], scanOptions['Blocksize'])
     return hashDups
 
@@ -73,15 +77,21 @@ def findDupsInDict(fileDict, hashAlgorithmVal, blocksize):
     results = list(filter(lambda x: len(x) > 1, fileDict.values()))
 
     if len(results) > 0:
+        currResult = 0
+        percentComplete = 0
+        numResults = len(results)
         for result in results:
+            currResult = currResult + 1
             for subresult in result:
-                print ('Checking hash of:', subresult)
                 fileHash = hashfile(subresult, blocksize, hashAlgorithms)
-                print ('[',fileHash, ']')
                 if fileHash in dups:
                     dups[fileHash].append(subresult)
                 else:
                     dups[fileHash] = [subresult]
+            print(' ' * 100, end='\r')
+            print ('Checking potential duplicate set', currResult, 'of', numResults, end='\r')
+            percentComplete = int(round(currResult / numResults,0))
+    print('')
     return dups
 
 # Joins two dictionaries
@@ -93,8 +103,6 @@ def joinDicts(dict1, dict2):
             dict1[key] = dict2[key]
  
 def getHashAlgorithms(algorithm_val):
-    if not str(algorithm_val).isnumeric():
-        algorithm_val = 1
     hashAlgorithms = {}
     valSHA512 = 32
     valSHA384 = 16
@@ -102,6 +110,9 @@ def getHashAlgorithms(algorithm_val):
     valSHA224 = 4
     valSHA1 = 2
     valMD5 = 1
+    if not str(algorithm_val).isnumeric():
+        algorithm_val = valMD5
+
     hashAlgorithms['useSHA512'] = False
     hashAlgorithms['useSHA384'] = False
     hashAlgorithms['useSHA256'] = False
@@ -133,8 +144,8 @@ def getHashAlgorithms(algorithm_val):
 def hashfile(path, blocksize, hashAlgorithms):
     compositeHash = ''
 
-    if blocksize <= 0:
-        blocksize = 65536
+    if int(blocksize) <= MIN_BLOCKSIZE:
+        blocksize = DEFAULT_BLOCKSIZE
     try:
         afile = open(path, 'rb')
         if hashAlgorithms['useMD5']: hasherMD5 = hashlib.md5()
@@ -166,13 +177,14 @@ def hashfile(path, blocksize, hashAlgorithms):
  
  
 def printResults(dict1, csvOutput):
-    if not os.path.exists(os.path.dirname(csvOutput)):
+    if (not os.path.exists(os.path.dirname(csvOutput)) and csvOutput != ''):
         warnings.append('WARNING: The folder name "' + os.path.dirname(csvOutput)
                         + '" for the CSV output file does not exist. '
                         + 'Results will be saved in ' + csvOutput.replace(os.path.dirname(csvOutput), DEFAULT_CSV_FOLDER) + ' instead.')
         csvOutput = csvOutput.replace(os.path.dirname(csvOutput), DEFAULT_CSV_FOLDER)
-        print (csvOutput)
+
     results = list(filter(lambda x: len(x) > 1, dict1.values()))
+    print('')
     print('************************************************************')
     if len(results) > 0:
         if csvOutput !='': f = open(csvOutput, 'w+')
@@ -383,7 +395,7 @@ if __name__ == '__main__':
     #Find all the duplicates
     dups = getDupsInFolders(folders)
 
-    #Print the results to the console
+    #Print the results to the console and any output file specified
     printResults(dups, scanOptions['CSVOutput'])
 
     #Print any errors / warnings and the duplicates found to the consoles

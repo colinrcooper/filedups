@@ -120,7 +120,7 @@ class TestUM(unittest.TestCase):
         hashAlgorithms['useSHA256']=False
         hashAlgorithms['useSHA384']=False
         hashAlgorithms['useSHA512']=False
-        self.assertEqual(hashfile(rootdir + '\\invalidpath\\invalidfile.txt', 65536, hashAlgorithms),0)
+        self.assertEqual(hashfile(rootdir + '\\invalidpath\\invalidfile.txt', DEFAULT_BLOCKSIZE, hashAlgorithms),0)
         
     def test_hashfile_InvalidBlocksize(self):
         #Invalid blocksize should default to 65536
@@ -142,7 +142,7 @@ class TestUM(unittest.TestCase):
         hashAlgorithms['useSHA256']=False
         hashAlgorithms['useSHA384']=False
         hashAlgorithms['useSHA512']=False
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, hashAlgorithms),'b7356a4b8764b54b3e3119dc2394bc7e')
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', DEFAULT_BLOCKSIZE, hashAlgorithms),'b7356a4b8764b54b3e3119dc2394bc7e')
 
     def test_hashfile_SHA1(self):
         #Check SHA1 is calculated correctly
@@ -153,7 +153,7 @@ class TestUM(unittest.TestCase):
         hashAlgorithms['useSHA256']=False
         hashAlgorithms['useSHA384']=False
         hashAlgorithms['useSHA512']=False
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, hashAlgorithms),'b38005fd56fa2de86f6458cb73d0d794912e94c0')
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', DEFAULT_BLOCKSIZE, hashAlgorithms),'b38005fd56fa2de86f6458cb73d0d794912e94c0')
 
     def test_hashfile_SHA224(self):
         #Check SHA224 is calculated correctly
@@ -164,7 +164,7 @@ class TestUM(unittest.TestCase):
         hashAlgorithms['useSHA256']=False
         hashAlgorithms['useSHA384']=False
         hashAlgorithms['useSHA512']=False
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, hashAlgorithms),'4f97a461d81e2aab7e1d7e0b208271317b07a6fe12d0fbbb1919fdc7')
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', DEFAULT_BLOCKSIZE, hashAlgorithms),'4f97a461d81e2aab7e1d7e0b208271317b07a6fe12d0fbbb1919fdc7')
 
     def test_hashfile_SHA256(self):
         #Check SHA256 is calculated correctly
@@ -175,7 +175,7 @@ class TestUM(unittest.TestCase):
         hashAlgorithms['useSHA256']=True
         hashAlgorithms['useSHA384']=False
         hashAlgorithms['useSHA512']=False
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, hashAlgorithms),'2ec3d40c866e3e2829dbbaade913e97da18eae9a67ae786da7e430a5f1186716')
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', DEFAULT_BLOCKSIZE, hashAlgorithms),'2ec3d40c866e3e2829dbbaade913e97da18eae9a67ae786da7e430a5f1186716')
 
     def test_hashfile_SHA384(self):
         #Check SHA384 is calculated correctly
@@ -186,7 +186,7 @@ class TestUM(unittest.TestCase):
         hashAlgorithms['useSHA256']=False
         hashAlgorithms['useSHA384']=True
         hashAlgorithms['useSHA512']=False
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, hashAlgorithms),'c8482ee90ab9cd3f50915d466c108cdef06b515954b53630aa2964a120adc883099314a4a6e47fb25daaf49ac1143070')
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', DEFAULT_BLOCKSIZE, hashAlgorithms),'c8482ee90ab9cd3f50915d466c108cdef06b515954b53630aa2964a120adc883099314a4a6e47fb25daaf49ac1143070')
 
     def test_hashfile_SHA512(self):
         #Check SHA512 is calculated correctly
@@ -197,7 +197,7 @@ class TestUM(unittest.TestCase):
         hashAlgorithms['useSHA256']=False
         hashAlgorithms['useSHA384']=False
         hashAlgorithms['useSHA512']=True
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, hashAlgorithms),'8531c07a2237475934675ac39ef71e8d49dc1c2c48482eead108910112e233bdfa10f60da906a1759b265e6b0db9cd7eaa5e9ec70175c615cc31c3f22529fa05')
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', DEFAULT_BLOCKSIZE, hashAlgorithms),'8531c07a2237475934675ac39ef71e8d49dc1c2c48482eead108910112e233bdfa10f60da906a1759b265e6b0db9cd7eaa5e9ec70175c615cc31c3f22529fa05')
 
     def test_hashfile_AllHashes(self):
         #Check Full Concatenation of all hashing algorithms is calculated correctly
@@ -208,18 +208,18 @@ class TestUM(unittest.TestCase):
         hashAlgorithms['useSHA256']=True
         hashAlgorithms['useSHA384']=True
         hashAlgorithms['useSHA512']=True
-        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', 65536, hashAlgorithms),'b7356a4b8764b54b3e3119dc2394bc7eb38005fd56fa2de86f6458cb73d0d794912e94c04f97a461d81e2aab7e1d7e0b208271317b07a6fe12d0fbbb1919fdc72ec3d40c866e3e2829dbbaade913e97da18eae9a67ae786da7e430a5f1186716c8482ee90ab9cd3f50915d466c108cdef06b515954b53630aa2964a120adc883099314a4a6e47fb25daaf49ac11430708531c07a2237475934675ac39ef71e8d49dc1c2c48482eead108910112e233bdfa10f60da906a1759b265e6b0db9cd7eaa5e9ec70175c615cc31c3f22529fa05')  
+        self.assertEqual(hashfile(rootdir + '\\testfiles\\file1.log', DEFAULT_BLOCKSIZE, hashAlgorithms),'b7356a4b8764b54b3e3119dc2394bc7eb38005fd56fa2de86f6458cb73d0d794912e94c04f97a461d81e2aab7e1d7e0b208271317b07a6fe12d0fbbb1919fdc72ec3d40c866e3e2829dbbaade913e97da18eae9a67ae786da7e430a5f1186716c8482ee90ab9cd3f50915d466c108cdef06b515954b53630aa2964a120adc883099314a4a6e47fb25daaf49ac11430708531c07a2237475934675ac39ef71e8d49dc1c2c48482eead108910112e233bdfa10f60da906a1759b265e6b0db9cd7eaa5e9ec70175c615cc31c3f22529fa05')  
 
     def test_loadDefaultScanOptions(self):
         testDict = {}
-        testDict['FilterMode'] = 'NONE'
-        testDict['FilterFile'] = ''
-        testDict['SubDirs'] = 'TRUE'
-        testDict['MaxFileSize'] = 0
-        testDict['IncludeEmptyFiles'] = 'FALSE'
-        testDict['Blocksize'] = 65536
-        testDict['CSVOutput'] = ''
-        testDict['HashAlgorithm'] = 1
+        testDict['FilterMode'] = DEFAULT_FILTERMODE
+        testDict['FilterFile'] = DEFAULT_FILTERFILE
+        testDict['SubDirs'] = DEFAULT_SUBDIRS
+        testDict['MaxFileSize'] = DEFAULT_MAXFILESIZE
+        testDict['IncludeEmptyFiles'] = DEFAULT_INCLUDEEMPTYFILES
+        testDict['Blocksize'] = DEFAULT_BLOCKSIZE
+        testDict['CSVOutput'] = DEFAULT_CSV
+        testDict['HashAlgorithm'] = DEFAULT_HASHALGORITHM
         self.assertDictEqual(loadDefaultScanOptions(), testDict) 
 
     def test_loadCommandLineScanOptionsValidArgs(self):
@@ -237,14 +237,14 @@ class TestUM(unittest.TestCase):
         cmdArg['hashAlgorithm'] = 3
         cmdArg['csvOutput'] = rootdir + '\\myresults.csv'
         cmdArg['directories'] = 'c:'
-        scanOptions['FilterMode'] = 'NONE'
-        scanOptions['FilterFile'] = ''
-        scanOptions['SubDirs'] = 'TRUE'
-        scanOptions['MaxFileSize'] = 0
-        scanOptions['IncludeEmptyFiles'] = 'FALSE'
-        scanOptions['Blocksize'] = 65536
-        scanOptions['HashAlgorithm'] = 1
-        scanOptions['CSVOutput'] = ''
+        scanOptions['FilterMode'] = DEFAULT_FILTERMODE
+        scanOptions['FilterFile'] = DEFAULT_FILTERFILE
+        scanOptions['SubDirs'] = DEFAULT_SUBDIRS
+        scanOptions['MaxFileSize'] = DEFAULT_MAXFILESIZE
+        scanOptions['IncludeEmptyFiles'] = DEFAULT_INCLUDEEMPTYFILES
+        scanOptions['Blocksize'] = DEFAULT_BLOCKSIZE
+        scanOptions['HashAlgorithm'] = DEFAULT_HASHALGORITHM
+        scanOptions['CSVOutput'] = DEFAULT_CSV
         expectedScanOptions['FilterMode'] = 'INCLUDE'
         expectedScanOptions['FilterFile'] = rootdir + '\\include-filters.txt'
         expectedScanOptions['SubDirs'] = 'FALSE'
@@ -270,20 +270,20 @@ class TestUM(unittest.TestCase):
         cmdArg['hashAlgorithm'] = 3
         cmdArg['csvOutput'] = rootdir + '\\myresults.csv'
         cmdArg['directories'] = 'c:'
-        scanOptions['FilterMode'] = 'NONE'
-        scanOptions['FilterFile'] = ''
-        scanOptions['SubDirs'] = 'TRUE'
-        scanOptions['MaxFileSize'] = 0
-        scanOptions['IncludeEmptyFiles'] = 'FALSE'
-        scanOptions['Blocksize'] = 65536
-        scanOptions['HashAlgorithm'] = 1
-        scanOptions['CSVOutput'] = ''
-        expectedScanOptions['FilterMode'] = 'NONE'
-        expectedScanOptions['FilterFile'] = ''
-        expectedScanOptions['SubDirs'] = 'TRUE'
+        scanOptions['FilterMode'] = DEFAULT_FILTERMODE
+        scanOptions['FilterFile'] = DEFAULT_FILTERFILE
+        scanOptions['SubDirs'] = DEFAULT_SUBDIRS
+        scanOptions['MaxFileSize'] = DEFAULT_MAXFILESIZE
+        scanOptions['IncludeEmptyFiles'] = DEFAULT_INCLUDEEMPTYFILES
+        scanOptions['Blocksize'] = DEFAULT_BLOCKSIZE
+        scanOptions['HashAlgorithm'] = DEFAULT_HASHALGORITHM
+        scanOptions['CSVOutput'] = DEFAULT_CSV
+        expectedScanOptions['FilterMode'] = DEFAULT_FILTERMODE
+        expectedScanOptions['FilterFile'] = DEFAULT_FILTERFILE
+        expectedScanOptions['SubDirs'] = DEFAULT_SUBDIRS
         expectedScanOptions['MaxFileSize'] = 100000
-        expectedScanOptions['IncludeEmptyFiles'] = 'FALSE'
-        expectedScanOptions['Blocksize'] = 65536
+        expectedScanOptions['IncludeEmptyFiles'] = DEFAULT_INCLUDEEMPTYFILES
+        expectedScanOptions['Blocksize'] = DEFAULT_BLOCKSIZE
         expectedScanOptions['HashAlgorithm'] = 3
         expectedScanOptions['CSVOutput'] = rootdir + '\\myresults.csv'
         self.assertDictEqual(loadCommandLineScanOptions(cmdArg, scanOptions), expectedScanOptions)
@@ -350,36 +350,33 @@ class TestUM(unittest.TestCase):
 
     def test_loadConfigFileScanOptionsInValidValues(self):
         testDict = {}
-        testDict['FilterMode'] = 'NONE'
-        testDict['FilterFile'] = ''
-        testDict['SubDirs'] = 'TRUE'
-        testDict['MaxFileSize'] = 0
-        testDict['IncludeEmptyFiles'] = 'FALSE'
-        testDict['Blocksize'] = 65536
-        testDict['HashAlgorithm'] = 1
-        testDict['CSVOutput'] = ''
+        testDict['FilterMode'] = DEFAULT_FILTERMODE
+        testDict['FilterFile'] = DEFAULT_FILTERFILE
+        testDict['SubDirs'] = DEFAULT_SUBDIRS
+        testDict['MaxFileSize'] = DEFAULT_MAXFILESIZE
+        testDict['IncludeEmptyFiles'] = DEFAULT_INCLUDEEMPTYFILES
+        testDict['Blocksize'] = DEFAULT_BLOCKSIZE
+        testDict['HashAlgorithm'] = DEFAULT_HASHALGORITHM
+        testDict['CSVOutput'] = DEFAULT_CSV
         self.assertDictEqual(loadConfigFileScanOptions(rootdir + '\\bad-config.txt'), testDict)
 
     def test_loadConfigFileScanOptionsConfigNotFound(self):
         testDict = {}
-        testDict['FilterMode'] = 'NONE'
-        testDict['FilterFile'] = ''
-        testDict['SubDirs'] = 'TRUE'
-        testDict['MaxFileSize'] = 0
-        testDict['IncludeEmptyFiles'] = 'FALSE'
-        testDict['Blocksize'] = 65536
-        testDict['HashAlgorithm'] = 1
-        testDict['CSVOutput'] = ''
+        testDict['FilterMode'] = DEFAULT_FILTERMODE
+        testDict['FilterFile'] = DEFAULT_FILTERFILE
+        testDict['SubDirs'] = DEFAULT_SUBDIRS
+        testDict['MaxFileSize'] = DEFAULT_MAXFILESIZE
+        testDict['IncludeEmptyFiles'] = DEFAULT_INCLUDEEMPTYFILES
+        testDict['Blocksize'] = DEFAULT_BLOCKSIZE
+        testDict['HashAlgorithm'] = DEFAULT_HASHALGORITHM
+        testDict['CSVOutput'] = DEFAULT_CSV
         self.assertDictEqual(loadConfigFileScanOptions(rootdir + '\\invalidpath\\invalid-config-path.txt'), testDict) 
-
-
 
     def test_findDup_NonZero_NoSubDirs(self):
         #Only non-zero sized files of any size should be found
         dups = {}
         results = []
         scanOptions = loadDefaultScanOptions()
-        scanOptions['FilterMode'] = 'NONE'
         scanOptions['SubDirs'] = 'FALSE'
         filters = []
         dups = findDup(rootdir + '\\testfiles', filters, scanOptions)
@@ -393,7 +390,6 @@ class TestUM(unittest.TestCase):
         dups = {}
         results = []
         scanOptions = loadDefaultScanOptions()
-        scanOptions['FilterMode'] = 'NONE'
         filters = []
         dups = findDup(rootdir + '\\testfiles', filters, scanOptions)
         results = list(filter(lambda x: len(x) > 1, dups.values()))
@@ -407,7 +403,6 @@ class TestUM(unittest.TestCase):
         results = []
         scanOptions = loadDefaultScanOptions()
         scanOptions['IncludeEmptyFiles'] = 'TRUE'
-        scanOptions['FilterMode'] = 'NONE'
         scanOptions['SubDirs'] = 'FALSE'
         filters = []
         dups = findDup(rootdir + '\\testfiles', filters, scanOptions)
@@ -423,7 +418,6 @@ class TestUM(unittest.TestCase):
         results = []
         scanOptions = loadDefaultScanOptions()
         scanOptions['IncludeEmptyFiles'] = 'TRUE'
-        scanOptions['FilterMode'] = 'NONE'
         filters = []
         dups = findDup(rootdir + '\\testfiles', filters, scanOptions)
         results = list(filter(lambda x: len(x) > 1, dups.values()))
@@ -494,7 +488,6 @@ class TestUM(unittest.TestCase):
         results = []
         scanOptions = loadDefaultScanOptions()
         scanOptions['IncludeEmptyFiles'] = 'TRUE'
-        scanOptions['FilterMode'] = 'NONE'
         scanOptions['MaxFileSize'] = 30000
         scanOptions['SubDirs'] = 'FALSE'
         filters = []
@@ -510,7 +503,6 @@ class TestUM(unittest.TestCase):
         results = []
         scanOptions = loadDefaultScanOptions()
         scanOptions['IncludeEmptyFiles'] = 'TRUE'
-        scanOptions['FilterMode'] = 'NONE'
         scanOptions['MaxFileSize'] = 30000
         filters = []
         dups = findDup(rootdir + '\\testfiles', filters, scanOptions)
