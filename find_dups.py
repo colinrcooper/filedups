@@ -1,4 +1,10 @@
+from __future__ import print_function
 import os, sys
+
+if sys.version_info[0] != 3 or sys.version_info[1] < 0:
+    print('Your Python version is too old! Please use Python 3.0 or higher.')
+    sys.exit(1)
+
 import hashlib
 import fnmatch
 import configparser
