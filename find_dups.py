@@ -11,10 +11,10 @@ import configparser
 import argparse
 import platform
 
-os.chdir(os.path.dirname(__file__))
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 warnings = []
-BULLET = '*    ' + chr(8226) + ' '
+BULLET = '*     o  '
 DEFAULT_FILTERMODE = 'NONE'
 DEFAULT_FILTERFILE = ''
 DEFAULT_SUBDIRS = 'TRUE'
@@ -70,7 +70,6 @@ def findDup(parentFolder, filters, scanOptions):
                             sizeDups[fileSize].append(path)
                         else:
                             sizeDups[fileSize] = [path]
-    print (' ' * 100)
     print (numFiles, 'file(s) in',parentFolder, 'scanned.')
     print ('Now checking potential duplicates...')
     hashDups = findDupsInDict(sizeDups, scanOptions['HashAlgorithm'], scanOptions['Blocksize'])
@@ -184,25 +183,29 @@ def hashfile(path, blocksize, hashAlgorithms):
  
 def printResults(dict1, csvOutput):
     if (not os.path.exists(os.path.dirname(csvOutput)) and csvOutput != ''):
-        warnings.append('WARNING: The folder name "' + os.path.dirname(csvOutput)
-                        + '" for the CSV output file does not exist. '
-                        + 'Results will be saved in ' + csvOutput.replace(os.path.dirname(csvOutput), DEFAULT_CSV_FOLDER) + ' instead.')
-        csvOutput = csvOutput.replace(os.path.dirname(csvOutput), DEFAULT_CSV_FOLDER)
-
+        if os.path.dirname(csvOutput) == '':
+            newCsvOutput = DEFAULT_CSV_FOLDER + '\\' + csvOutput
+        else:
+            newCsvOutput = csvOutput.replace(os.path.dirname(csvOutput), DEFAULT_CSV_FOLDER)
+            warnings.append('WARNING: The folder name "' + os.path.dirname(csvOutput)
+                    + '" for the CSV output file does not exist. '
+                    + 'Results will be saved in ' + newCsvOutput + ' instead.')
+        csvOutput = newCsvOutput
+        
     results = list(filter(lambda x: len(x) > 1, dict1.values()))
     print('')
     print('************************************************************')
     if len(results) > 0:
         if csvOutput !='': f = open(csvOutput, 'w+')
         print('*  RESULTS: DUPLICATES FOUND:')
-        if csvOutput !='': f.write('DUPLICATES FOUND:\n')
+        if csvOutput !='': f.write('DUPLICATES FOUND:\nFile Name,File Size (bytes)')
         print('*  ---------------------------------------------------------')
         for result in results:
             if csvOutput !='': f.write('\n')
             for subresult in result:
-                print('*  \t%s' % subresult)
-                if csvOutput !='': f.write(subresult + '\n')
-            print('*  ---------------------------------------------------------')
+                print('*  \t' + subresult)
+                if csvOutput !='': f.write(subresult + ',' + str(os.path.getsize(subresult)) + '\n')
+            print('*  ---------------------------------------------------------\n*')
         if csvOutput !='': f.close()
  
     else:
@@ -223,7 +226,6 @@ def loadDefaultScanOptions():
     return scanOptions
 
 def loadConfigFileScanOptions(configFile):
-    
     #These values will override the defaults if they are set
     scanOptions = {}
     scanOptions = loadDefaultScanOptions()
@@ -260,6 +262,7 @@ def loadFilters(filterFile):
 
 def printHashAlgorithms(hashAlgorithms):
     print('*  USING ALGORITHMS:')
+    print('*  -----------------')
     if hashAlgorithms['useMD5']: print(BULLET + 'MD5')
     if hashAlgorithms['useSHA1']: print(BULLET + 'SHA1')
     if hashAlgorithms['useSHA224']: print(BULLET + 'SHA224')
@@ -310,14 +313,17 @@ def printSettings(folders, scanOptions, filters):
     print('')
     print('************************************************************')
     printHashAlgorithms(getHashAlgorithms(scanOptions['HashAlgorithm']))
-    print('*  FOLDER(S) TO SCAN:')
+    print('*  \n*  FOLDER(S) TO SCAN:')
+    print('*  ------------------')
     for x in folders: print(BULLET + str(x)) 
-    print('*  SCAN OPTIONS USED:')
+    print('*  \n*  SCAN OPTIONS USED:')
+    print('*  ------------------')
     for x in scanOptions: print(BULLET + padSpaces(str(x),20) + ': ' + str(scanOptions[x]))
     if len(filters) > 0:
         print('*  FILTERS: ')
+        print('*  --------')
         for x in filters: print(BULLET + str(x)) 
-    print('************************************************************')
+    print('*\n************************************************************')
     print ('')
 
 def printWarnings(warnings):
@@ -394,7 +400,7 @@ if __name__ == '__main__':
     
     #Get list of directories to be scanned (currently can only be a command line parameter)
     folders = args['directories']
-
+    
     #Print the list of settings to the console
     printSettings(folders, scanOptions, filters)
 
