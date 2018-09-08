@@ -35,6 +35,13 @@ def findDup(parentFolder, filters, scanOptions):
     hashDups = {}
     filterMode = scanOptions['FilterMode']
     numFiles = 0
+
+    try:
+        maxcol = os.get_terminal_size().columns - 2
+    # piped output to file or other process
+    except OSError:
+        maxcol = sys.maxsize - 2
+
     for dirName, subdirs, fileList in os.walk(parentFolder):
         newDirName = True
         for fileName in fileList:
@@ -50,8 +57,8 @@ def findDup(parentFolder, filters, scanOptions):
                         filterFound=True
                 if (not filterFound and filterMode.upper() == 'EXCLUDE') or (filterFound and filterMode.upper() == 'INCLUDE') or (filterMode.upper()=='NONE'):
                     if newDirName:
-                        print(' ' * 100, end='\r')
-                        print('Scanning %s' % shortenName(dirName, 80), end='\r')
+                        print(' ' * maxcol, end='\r')
+                        print('Scanning ' + shortenName(dirName, maxcol - 9), end='\r')
                         newDirName = False
                     try:
                         fileSize = int(os.path.getsize(path))
