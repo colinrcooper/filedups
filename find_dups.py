@@ -89,9 +89,9 @@ def findDupsInDict(fileDict, hashAlgorithmVal, blocksize):
             currResult = currResult + 1
             for subresult in result:
                 fileHash = hashfile(subresult, blocksize, hashAlgorithms)
-                if fileHash in dups:
+                if fileHash in dups and fileHash != 0:
                     dups[fileHash].append(subresult)
-                else:
+                elif not(fileHash in dups) and fileHash != 0:
                     dups[fileHash] = [subresult]
             print(' ' * 100, end='\r')
             print ('Checking potential duplicate set', currResult, 'of', numResults, end='\r')
@@ -184,7 +184,7 @@ def hashfile(path, blocksize, hashAlgorithms):
 def printResults(dict1, csvOutput):
     if (not os.path.exists(os.path.dirname(csvOutput)) and csvOutput != ''):
         if os.path.dirname(csvOutput) == '':
-            newCsvOutput = DEFAULT_CSV_FOLDER + '\\' + csvOutput
+            newCsvOutput = os.path.join(DEFAULT_CSV_FOLDER, csvOutput)
         else:
             newCsvOutput = csvOutput.replace(os.path.dirname(csvOutput), DEFAULT_CSV_FOLDER)
             warnings.append('WARNING: The folder name "' + os.path.dirname(csvOutput)
