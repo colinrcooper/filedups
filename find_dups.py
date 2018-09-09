@@ -26,6 +26,12 @@ DEFAULT_CSV_FOLDER = os.getcwd()
 DEFAULT_CSV = ''
 MIN_BLOCKSIZE = 65536
 
+try:
+    maxcol = os.get_terminal_size().columns - 2
+
+# piped output to file or other process
+except OSError:
+    maxcol = sys.maxsize - 2
 
 def findDup(parentFolder, filters, scanOptions):
     # This does a quick scan to identify files of exactly the same size without having to read every files contents
@@ -35,12 +41,6 @@ def findDup(parentFolder, filters, scanOptions):
     hashDups = {}
     filterMode = scanOptions['FilterMode']
     numFiles = 0
-
-    try:
-        maxcol = os.get_terminal_size().columns - 2
-    # piped output to file or other process
-    except OSError:
-        maxcol = sys.maxsize - 2
 
     for dirName, subdirs, fileList in os.walk(parentFolder):
         newDirName = True
@@ -77,7 +77,8 @@ def findDup(parentFolder, filters, scanOptions):
                             sizeDups[fileSize].append(path)
                         else:
                             sizeDups[fileSize] = [path]
-    print (numFiles, 'file(s) in',parentFolder, 'scanned.')
+    print(' ' * maxcol, end='\r')
+    print (str(numFiles) + ' file(s) in',parentFolder, 'scanned.')
     print ('Now checking potential duplicates...')
     hashDups = findDupsInDict(sizeDups, scanOptions['HashAlgorithm'], scanOptions['Blocksize'])
     return hashDups
@@ -100,7 +101,7 @@ def findDupsInDict(fileDict, hashAlgorithmVal, blocksize):
                     dups[fileHash].append(subresult)
                 elif not(fileHash in dups) and fileHash != 0:
                     dups[fileHash] = [subresult]
-            print(' ' * 100, end='\r')
+            print(' ' * maxcol, end='\r')
             print ('Checking potential duplicate set', currResult, 'of', numResults, end='\r')
             percentComplete = int(round(currResult / numResults,0))
     print('')
